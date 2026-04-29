@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
-import { Sparkles, Mail, Globe2 } from "lucide-react";
+import { Sparkles, Mail, ArrowLeft } from "lucide-react";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -51,17 +51,18 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Admin / contact */}
+          {/* Get started / contact */}
           <div className="md:col-span-4">
-            <h4 className="font-bold text-stone-900 mb-3 text-sm">للإدارة</h4>
+            <h4 className="font-bold text-stone-900 mb-3 text-sm">ابدأ الآن</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/admin/login"
-                  className="inline-flex items-center gap-2 text-stone-600 hover:text-brand-700 transition"
+                  href="/analyze"
+                  className="inline-flex items-center gap-2 text-brand-700 hover:text-brand-900 font-semibold transition"
                 >
-                  <Globe2 className="w-4 h-4" />
-                  دخول لوحة التحكم
+                  <Sparkles className="w-4 h-4" />
+                  ابدأ التحليل المجاني
+                  <ArrowLeft className="w-3.5 h-3.5" />
                 </Link>
               </li>
               <li>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "./Logo";
-import { LogIn, Menu, X } from "lucide-react";
+import { Sparkles, Menu, X } from "lucide-react";
 
 const links = [
   { href: "/#how", label: "كيف يعمل" },
@@ -62,11 +62,11 @@ export function Header() {
 
           <div className="flex items-center gap-2">
             <Link
-              href="/admin/login"
+              href="/analyze"
               className="hidden md:inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-l from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-semibold px-4 py-2 text-sm transition-all shadow-md shadow-brand-600/20 hover:shadow-lg active:scale-95"
             >
-              <LogIn className="w-4 h-4" />
-              دخول الإدارة
+              <Sparkles className="w-4 h-4" />
+              ابدأ التحليل
             </Link>
 
             <button
@@ -117,12 +117,12 @@ export function Header() {
         </nav>
         <div className="p-3 border-t border-stone-100">
           <Link
-            href="/admin/login"
+            href="/analyze"
             onClick={() => setOpen(false)}
             className="btn-primary w-full text-sm"
           >
-            <LogIn className="w-4 h-4" />
-            دخول الإدارة
+            <Sparkles className="w-4 h-4" />
+            ابدأ التحليل
           </Link>
         </div>
       </aside>

@@ -339,7 +339,7 @@ export default function HomePage() {
                   املأ بياناتك واحصل على تقرير ذكي مفصّل بمسار تعلم مخصّص خلال أقل من دقيقة.
                 </p>
               </div>
-              <div className="md:text-left flex flex-col gap-3 md:items-start">
+              <div className="md:text-left">
                 <Link
                   href="/analyze"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand-800 hover:bg-gold-50 px-6 py-3.5 font-bold shadow-lg shadow-black/10 transition hover:scale-105 active:scale-95 w-full md:w-auto"
@@ -348,13 +348,7 @@ export default function HomePage() {
                   ابدأ التحليل الآن
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <Link
-                  href="/admin/login"
-                  className="inline-flex items-center justify-center gap-2 text-xs text-white/70 hover:text-white transition"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  دخول الإدارة
-                </Link>
+                <p className="mt-3 text-xs text-white/60">مجاني — لن يستغرق أكثر من دقيقة</p>
               </div>
             </div>
           </div>
