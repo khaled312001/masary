@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { analyzeWithClaude, type AnalysisInput } from "@/lib/ai";
+import { requireAdmin } from "@/lib/adminGuard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,6 +16,9 @@ const Schema = z.object({
 });
 
 export async function POST(req: Request) {
+  const guard = await requireAdmin();
+  if (guard) return guard;
+
   let body: unknown;
   try {
     body = await req.json();
@@ -118,8 +122,8 @@ async function findMatchingJob(title: string) {
     .findFirst({
       where: {
         OR: [
-          { titleAr: { contains: normalized, mode: "insensitive" } },
-          { titleEn: { contains: normalized, mode: "insensitive" } }
+          { titleAr: { contains: normalized } },
+          { titleEn: { contains: normalized } }
         ]
       },
       include: { skills: { include: { skill: true } } }

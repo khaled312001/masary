@@ -3,29 +3,29 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model Job {
-  id            String      @id @default(cuid())
-  titleAr       String
-  titleEn       String?
-  descriptionAr String      @db.Text
-  category      String?
-  level         String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id            String   @id @default(cuid())
+  titleAr       String   @db.VarChar(200)
+  titleEn       String?  @db.VarChar(200)
+  descriptionAr String   @db.Text
+  category      String?  @db.VarChar(80)
+  level         String?  @db.VarChar(40)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   skills        JobSkill[]
   paths         LearningPath[]
 }
 
 model Skill {
-  id        String      @id @default(cuid())
-  nameAr    String      @unique
-  nameEn    String?
-  category  String?
-  createdAt DateTime    @default(now())
+  id        String   @id @default(cuid())
+  nameAr    String   @unique @db.VarChar(160)
+  nameEn    String?  @db.VarChar(160)
+  category  String?  @db.VarChar(80)
+  createdAt DateTime @default(now())
   jobs      JobSkill[]
   courses   CourseSkill[]
 }
@@ -34,48 +34,51 @@ model JobSkill {
   id         String  @id @default(cuid())
   jobId      String
   skillId    String
-  importance Int     @default(3) // 1..5
+  importance Int     @default(3)
   job        Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
   skill      Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, skillId])
+  @@index([skillId])
 }
 
 model Company {
   id          String   @id @default(cuid())
-  nameAr      String
-  nameEn      String?
-  industry    String?
-  website     String?
-  logoUrl     String?
+  nameAr      String   @db.VarChar(200)
+  nameEn      String?  @db.VarChar(200)
+  industry    String?  @db.VarChar(80)
+  website     String?  @db.VarChar(255)
+  logoUrl     String?  @db.VarChar(255)
   description String?  @db.Text
   createdAt   DateTime @default(now())
 }
 
 model Platform {
   id      String   @id @default(cuid())
-  nameAr  String
-  nameEn  String?
-  website String?
-  logoUrl String?
+  nameAr  String   @db.VarChar(160)
+  nameEn  String?  @db.VarChar(160)
+  website String?  @db.VarChar(255)
+  logoUrl String?  @db.VarChar(255)
   courses Course[]
 }
 
 model Course {
   id           String        @id @default(cuid())
-  titleAr      String
-  titleEn      String?
+  titleAr      String        @db.VarChar(255)
+  titleEn      String?       @db.VarChar(255)
   description  String?       @db.Text
-  url          String?
+  url          String?       @db.VarChar(500)
   durationHrs  Int?
-  level        String?
+  level        String?       @db.VarChar(40)
   isFree       Boolean       @default(false)
-  language     String?       @default("ar")
+  language     String?       @default("ar") @db.VarChar(10)
   platformId   String?
   platform     Platform?     @relation(fields: [platformId], references: [id], onDelete: SetNull)
   skills       CourseSkill[]
   paths        LearningPathCourse[]
   createdAt    DateTime      @default(now())
+
+  @@index([platformId])
 }
 
 model CourseSkill {
@@ -86,35 +89,43 @@ model CourseSkill {
   skill    Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, skillId])
+  @@index([skillId])
 }
 
 model LearningPath {
   id          String                 @id @default(cuid())
-  titleAr     String
+  titleAr     String                 @db.VarChar(200)
   description String?                @db.Text
   jobId       String?
   job         Job?                   @relation(fields: [jobId], references: [id], onDelete: SetNull)
   courses     LearningPathCourse[]
   createdAt   DateTime               @default(now())
+
+  @@index([jobId])
 }
 
 model LearningPathCourse {
-  id     String       @id @default(cuid())
-  pathId String
+  id       String       @id @default(cuid())
+  pathId   String
   courseId String
-  order  Int          @default(0)
-  path   LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
-  course Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order    Int          @default(0)
+  path     LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
+  course   Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([pathId])
+  @@index([courseId])
 }
 
 model Report {
   id              String   @id @default(cuid())
-  fullName        String
-  jobTitle        String
-  employer        String?
+  fullName        String   @db.VarChar(150)
+  jobTitle        String   @db.VarChar(200)
+  employer        String?  @db.VarChar(200)
   currentSkills   String   @db.Text
   currentCourses  String?  @db.Text
   matchedJobId    String?
   data            Json
   createdAt       DateTime @default(now())
+
+  @@index([createdAt])
 }

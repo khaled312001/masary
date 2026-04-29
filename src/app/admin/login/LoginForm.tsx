@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2, LogIn, Mail, Lock } from "lucide-react";
 
 export function LoginForm() {
   const router = useRouter();
@@ -36,7 +36,10 @@ export function LoginForm() {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="label">البريد الإلكتروني</label>
+        <label className="label flex items-center gap-2">
+          <Mail className="w-4 h-4 text-brand-600" />
+          البريد الإلكتروني
+        </label>
         <input
           type="email"
           className="input"
@@ -44,10 +47,14 @@ export function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoFocus
         />
       </div>
       <div>
-        <label className="label">كلمة المرور</label>
+        <label className="label flex items-center gap-2">
+          <Lock className="w-4 h-4 text-brand-600" />
+          كلمة المرور
+        </label>
         <input
           type="password"
           className="input"
@@ -58,7 +65,7 @@ export function LoginForm() {
         />
       </div>
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
+        <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm animate-fade-in">
           {error}
         </div>
       )}

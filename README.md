@@ -11,7 +11,7 @@
 - 🧠 لوحة تحكم كاملة للمشرفين لإدارة الوظائف، المهارات، الكورسات، الشركات، والمنصات
 - 🌐 واجهة عربية احترافية RTL مناسبة للهاتف
 - 🚀 جاهز للنشر على Vercel
-- 🗄️ قاعدة بيانات PostgreSQL عبر Prisma
+- 🗄️ قاعدة بيانات MySQL (Hostinger) عبر Prisma
 
 ## التشغيل المحلي
 
@@ -26,14 +26,14 @@ npm install
 انسخ `.env.example` إلى `.env` وعبّئ القيم:
 
 ```env
-DATABASE_URL="postgresql://user:password@host:5432/masary?sslmode=require"
+DATABASE_URL="mysql://user:password@host:3306/database"
 ANTHROPIC_API_KEY="sk-ant-..."
 ADMIN_EMAIL="admin@masary.sa"
 ADMIN_PASSWORD="ChangeMe!2026"
 AUTH_SECRET="please-replace-with-a-long-random-32-byte-secret"
 ```
 
-> 💡 احصل على قاعدة بيانات Postgres مجانية من [Neon](https://neon.tech) أو [Vercel Postgres](https://vercel.com/storage/postgres).
+> 💡 يدعم المشروع MySQL (Hostinger، PlanetScale، أي MySQL 5.7+).
 
 ### 3. إنشاء جداول قاعدة البيانات
 
@@ -91,7 +91,7 @@ npm run db:seed
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
-| Database | Prisma + PostgreSQL |
+| Database | Prisma + MySQL |
 | AI | @anthropic-ai/sdk (Claude Sonnet 4.6) |
 | Auth | jose (JWT) للأدمن |
 | Validation | Zod |

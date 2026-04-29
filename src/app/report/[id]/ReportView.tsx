@@ -46,11 +46,11 @@ export function ReportView({ report }: Props) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="card !p-6 md:!p-8 bg-gradient-to-br from-brand-700 to-brand-900 text-white border-none relative overflow-hidden">
-        <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-gold-400/20 blur-3xl pointer-events-none" />
-        <div className="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-brand-300/20 blur-3xl pointer-events-none" />
+      <div className="card !p-6 md:!p-8 bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 text-white border-none relative overflow-hidden animate-scale-in">
+        <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-gold-400/20 blur-3xl pointer-events-none animate-pulse-slow" />
+        <div className="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-brand-300/20 blur-3xl pointer-events-none animate-pulse-slow" />
         <div className="relative">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -82,7 +82,7 @@ export function ReportView({ report }: Props) {
             <button onClick={shareLink} className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 text-sm font-semibold transition">
               <Share2 className="w-4 h-4" /> {copied ? "تم النسخ" : "مشاركة"}
             </button>
-            <Link href="/analyze" className="inline-flex items-center gap-2 rounded-xl bg-white text-brand-700 hover:bg-gold-50 px-4 py-2 text-sm font-semibold transition">
+            <Link href="/admin/analyze" className="inline-flex items-center gap-2 rounded-xl bg-white text-brand-700 hover:bg-gold-50 px-4 py-2 text-sm font-semibold transition active:scale-95">
               <ArrowLeft className="w-4 h-4" /> تحليل جديد
             </Link>
           </div>
@@ -91,10 +91,12 @@ export function ReportView({ report }: Props) {
 
       {/* Encouragement */}
       {data.encouragement && (
-        <div className="card border-r-4 !border-r-gold-400">
+        <div className="card border-r-4 !border-r-gold-400 animate-slide-up bg-gradient-to-l from-gold-50/50 to-transparent" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
           <div className="flex items-start gap-3">
-            <Lightbulb className="w-6 h-6 text-gold-500 shrink-0 mt-1" />
-            <p className="text-stone-700 leading-relaxed">{data.encouragement}</p>
+            <div className="w-10 h-10 rounded-full bg-gold-100 flex items-center justify-center shrink-0">
+              <Lightbulb className="w-5 h-5 text-gold-600" />
+            </div>
+            <p className="text-stone-700 leading-relaxed mt-1">{data.encouragement}</p>
           </div>
         </div>
       )}
