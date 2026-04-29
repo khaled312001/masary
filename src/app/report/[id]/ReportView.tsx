@@ -18,6 +18,7 @@ import {
   Lock,
   Award
 } from "lucide-react";
+import { ContentProtection } from "@/components/ContentProtection";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -51,6 +52,7 @@ export function ReportView({ report }: Props) {
 
   return (
     <div className="space-y-6">
+      <ContentProtection active={!isPaid} />
       {/* Header */}
       <div className="card !p-6 md:!p-8 bg-gradient-to-br from-brand-700 via-brand-800 to-brand-900 text-white border-none relative overflow-hidden animate-scale-in">
         <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-gold-400/20 blur-3xl pointer-events-none animate-pulse-slow" />
