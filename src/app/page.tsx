@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { HeroVisual } from "@/components/HeroVisual";
 import {
   ArrowLeft,
   Brain,
@@ -22,27 +23,84 @@ export default function HomePage() {
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-brand-50/40 to-transparent pointer-events-none" />
-          <div className="absolute top-20 right-10 w-72 h-72 rounded-full bg-brand-200/30 blur-3xl pointer-events-none animate-pulse-slow" />
-          <div className="absolute top-40 left-10 w-72 h-72 rounded-full bg-gold-200/30 blur-3xl pointer-events-none animate-pulse-slow" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-10 right-10 w-72 h-72 md:w-96 md:h-96 rounded-full bg-brand-300/20 blur-3xl pointer-events-none animate-pulse-slow" />
+          <div className="absolute top-40 left-10 w-72 h-72 md:w-96 md:h-96 rounded-full bg-gold-300/20 blur-3xl pointer-events-none animate-pulse-slow" style={{ animationDelay: "1.5s" }} />
+          <div className="absolute bottom-0 right-1/3 w-72 h-72 rounded-full bg-brand-400/15 blur-3xl pointer-events-none animate-pulse-slow" style={{ animationDelay: "3s" }} />
+          <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
 
-          <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-16 md:py-28 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white border border-brand-100 px-4 py-1.5 text-xs font-medium text-brand-700 shadow-sm animate-fade-in">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              مدعوم بالذكاء الاصطناعي
+          <div className="relative mx-auto max-w-7xl px-4 md:px-8 py-12 md:py-24">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+              {/* Text column */}
+              <div className="text-center lg:text-right order-2 lg:order-1">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur border border-brand-100 px-4 py-1.5 text-xs font-medium text-brand-700 shadow-sm animate-fade-in">
+                  <span className="relative flex w-2 h-2">
+                    <span className="absolute inline-flex w-full h-full rounded-full bg-brand-500 opacity-75 animate-ping" />
+                    <span className="relative inline-flex w-2 h-2 rounded-full bg-brand-600" />
+                  </span>
+                  مدعوم بالذكاء الاصطناعي · Claude AI
+                </div>
+                <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight text-stone-900 text-balance leading-[1.1] animate-slide-up">
+                  مسارك المهني
+                  <br />
+                  يبدأ من{" "}
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-l from-brand-500 via-brand-700 to-brand-900 bg-clip-text text-transparent">
+                      مساري
+                    </span>
+                    <span className="absolute -bottom-2 left-0 right-0 h-2 bg-gradient-to-l from-gold-300/80 to-gold-500/80 -z-10 rounded-full" />
+                  </span>
+                </h1>
+                <p
+                  className="mt-5 max-w-xl mx-auto lg:mx-0 text-base md:text-lg text-stone-600 text-balance leading-relaxed animate-slide-up"
+                  style={{ animationDelay: "100ms", animationFillMode: "backwards" }}
+                >
+                  منصة ذكية تحلل الفجوة بين مهاراتك الحالية والمهارات المطلوبة لوظيفتك المستهدفة،
+                  وترسم لك مسار تعلم احترافي مخصص بدورات وروابط حقيقية.
+                </p>
+
+                {/* CTA buttons */}
+                <div
+                  className="mt-7 flex flex-wrap justify-center lg:justify-start gap-3 animate-slide-up"
+                  style={{ animationDelay: "200ms", animationFillMode: "backwards" }}
+                >
+                  <Link href="/admin/login" className="btn-primary !py-3.5 !px-6 text-base">
+                    <Sparkles className="w-4 h-4" />
+                    دخول الإدارة
+                  </Link>
+                  <Link href="#how" className="btn-secondary !py-3.5 !px-6 text-base">
+                    كيف يعمل؟
+                    <ArrowLeft className="w-4 h-4" />
+                  </Link>
+                </div>
+
+                {/* Trust signals */}
+                <div
+                  className="mt-8 flex flex-wrap justify-center lg:justify-start items-center gap-x-6 gap-y-3 animate-fade-in"
+                  style={{ animationDelay: "400ms", animationFillMode: "backwards" }}
+                >
+                  <div className="flex items-center gap-1.5 text-xs text-stone-600">
+                    <CheckCircle2 className="w-4 h-4 text-brand-600" />
+                    تحليل دقيق
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-stone-600">
+                    <CheckCircle2 className="w-4 h-4 text-brand-600" />
+                    مسار مخصص
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-stone-600">
+                    <CheckCircle2 className="w-4 h-4 text-brand-600" />
+                    سوق سعودي وخليجي
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual column */}
+              <div className="order-1 lg:order-2 animate-slide-up" style={{ animationDelay: "150ms", animationFillMode: "backwards" }}>
+                <HeroVisual />
+              </div>
             </div>
-            <h1 className="mt-6 text-4xl md:text-6xl font-extrabold tracking-tight text-stone-900 text-balance leading-tight animate-slide-up">
-              مسارك المهني
-              <br />
-              يبدأ من{" "}
-              <span className="bg-gradient-to-l from-brand-600 via-brand-700 to-brand-900 bg-clip-text text-transparent">
-                مساري
-              </span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-lg text-stone-600 text-balance animate-slide-up" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
-              منصة ذكية تحلل الفجوة بين مهاراتك الحالية والمهارات المطلوبة لوظيفتك المستهدفة،
-              وترسم لك مسار تعلم احترافي مخصص بدورات وروابط حقيقية.
-            </p>
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+
+            {/* Stats */}
+            <div className="mt-16 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-4xl mx-auto">
               {[
                 { num: "+200", label: "مهارة محللة" },
                 { num: "+50", label: "وظيفة مفهرسة" },
@@ -51,10 +109,12 @@ export default function HomePage() {
               ].map((s, i) => (
                 <div
                   key={s.label}
-                  className="rounded-2xl bg-white/80 border border-stone-100 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all animate-slide-up"
-                  style={{ animationDelay: `${200 + i * 100}ms`, animationFillMode: "backwards" }}
+                  className="group rounded-2xl bg-white/70 backdrop-blur border border-white/50 p-4 hover:shadow-lg hover:-translate-y-0.5 hover:border-brand-200 transition-all animate-slide-up"
+                  style={{ animationDelay: `${300 + i * 100}ms`, animationFillMode: "backwards" }}
                 >
-                  <div className="text-2xl md:text-3xl font-extrabold text-brand-700">{s.num}</div>
+                  <div className="text-2xl md:text-3xl font-extrabold bg-gradient-to-l from-brand-600 to-brand-800 bg-clip-text text-transparent">
+                    {s.num}
+                  </div>
                   <div className="text-xs text-stone-500 mt-1">{s.label}</div>
                 </div>
               ))}
