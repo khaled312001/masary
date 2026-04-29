@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { apiServerSafe } from "@/lib/api";
 import { ExternalLink } from "lucide-react";
+import { PaidToggle } from "./PaidToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,7 @@ type Report = {
   fullName: string;
   jobTitle: string;
   employer: string | null;
+  isPaid: boolean;
   createdAt: string;
 };
 
@@ -29,7 +31,8 @@ export default async function ReportsAdminPage() {
               <tr>
                 <th className="text-right p-3 font-semibold">الاسم</th>
                 <th className="text-right p-3 font-semibold">المسمى</th>
-                <th className="text-right p-3 font-semibold">جهة العمل</th>
+                <th className="text-right p-3 font-semibold">الجهة</th>
+                <th className="text-right p-3 font-semibold">الحالة</th>
                 <th className="text-right p-3 font-semibold">التاريخ</th>
                 <th className="p-3"></th>
               </tr>
@@ -37,7 +40,7 @@ export default async function ReportsAdminPage() {
             <tbody>
               {reports.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-stone-500">
+                  <td colSpan={6} className="p-8 text-center text-stone-500">
                     لم يتم إنشاء تقارير بعد
                   </td>
                 </tr>
@@ -47,7 +50,10 @@ export default async function ReportsAdminPage() {
                   <td className="p-3 font-semibold text-stone-900">{r.fullName}</td>
                   <td className="p-3 text-stone-700">{r.jobTitle}</td>
                   <td className="p-3 text-stone-700">{r.employer ?? "—"}</td>
-                  <td className="p-3 text-stone-500 text-xs">
+                  <td className="p-3">
+                    <PaidToggle id={r.id} isPaid={r.isPaid} />
+                  </td>
+                  <td className="p-3 text-stone-500 text-xs whitespace-nowrap">
                     {new Date(r.createdAt).toLocaleString("ar-SA")}
                   </td>
                   <td className="p-3 text-left">

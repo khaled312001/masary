@@ -13,6 +13,7 @@ type ReportRow = {
   jobTitle: string;
   employer: string | null;
   createdAt: string;
+  isPaid: boolean;
   data: AnalysisReport;
 };
 
@@ -36,6 +37,7 @@ export default async function ReportPage({ params }: { params: { id: string } })
             jobTitle: report.jobTitle,
             employer: report.employer,
             createdAt: report.createdAt,
+            isPaid: !!report.isPaid,
             data: report.data
           }}
         />

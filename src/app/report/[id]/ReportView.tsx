@@ -14,7 +14,9 @@ import {
   Building2,
   ArrowLeft,
   Lightbulb,
-  Target
+  Target,
+  Lock,
+  Award
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,6 +28,7 @@ type Props = {
     jobTitle: string;
     employer: string | null;
     createdAt: string;
+    isPaid: boolean;
     data: AnalysisReport;
   };
 };
@@ -33,6 +36,7 @@ type Props = {
 export function ReportView({ report }: Props) {
   const { data } = report;
   const [copied, setCopied] = useState(false);
+  const isPaid = report.isPaid;
 
   function shareLink() {
     const url = window.location.href;
@@ -76,13 +80,19 @@ export function ReportView({ report }: Props) {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-2 no-print">
-            <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 text-sm font-semibold transition">
-              <Printer className="w-4 h-4" /> طباعة
-            </button>
             <button onClick={shareLink} className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 text-sm font-semibold transition">
               <Share2 className="w-4 h-4" /> {copied ? "تم النسخ" : "مشاركة"}
             </button>
-            <Link href="/admin/analyze" className="inline-flex items-center gap-2 rounded-xl bg-white text-brand-700 hover:bg-gold-50 px-4 py-2 text-sm font-semibold transition active:scale-95">
+            {isPaid ? (
+              <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-xl bg-white text-brand-700 hover:bg-gold-50 px-4 py-2 text-sm font-bold transition active:scale-95 shadow-lg">
+                <Printer className="w-4 h-4" /> تنزيل / طباعة
+              </button>
+            ) : (
+              <Link href={`/pay/${report.id}`} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-l from-gold-400 to-gold-600 text-white px-4 py-2 text-sm font-bold transition active:scale-95 shadow-lg hover:from-gold-500 hover:to-gold-700">
+                <Lock className="w-4 h-4" /> فعّل التنزيل والشهادة
+              </Link>
+            )}
+            <Link href="/analyze" className="inline-flex items-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur px-4 py-2 text-sm font-semibold transition">
               <ArrowLeft className="w-4 h-4" /> تحليل جديد
             </Link>
           </div>
@@ -235,6 +245,68 @@ export function ReportView({ report }: Props) {
             نصيحة ختامية
           </h2>
           <p className="text-stone-800 leading-loose">{data.finalAdvice}</p>
+        </section>
+      )}
+
+      {/* Paywall section */}
+      {!isPaid && (
+        <section className="no-print relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-800 to-brand-950 text-white p-6 md:p-10 shadow-2xl animate-slide-up">
+          <div className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-gold-400/20 blur-3xl pointer-events-none animate-pulse-slow" />
+          <div className="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-brand-300/20 blur-3xl pointer-events-none animate-pulse-slow" />
+          <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full bg-gold-400/20 backdrop-blur border border-gold-300/30 px-3 py-1 text-xs font-medium text-gold-200">
+              <Lock className="w-3.5 h-3.5" />
+              ميزات مدفوعة
+            </div>
+            <h2 className="mt-4 text-2xl md:text-3xl font-extrabold">احصل على النسخة الكاملة</h2>
+            <p className="mt-2 text-white/80 max-w-xl text-sm md:text-base">
+              فعّل الميزات المتقدمة بـ <span className="font-bold text-gold-300">٥٠ ريال</span> فقط لمرة واحدة
+            </p>
+
+            <div className="mt-6 grid sm:grid-cols-2 gap-3 max-w-2xl">
+              <div className="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-4">
+                <Printer className="w-6 h-6 text-gold-300" />
+                <h3 className="mt-2 font-bold">تنزيل التقرير PDF</h3>
+                <p className="text-xs text-white/70 mt-1">نسخة احترافية قابلة للطباعة والمشاركة</p>
+              </div>
+              <div className="rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-4">
+                <Award className="w-6 h-6 text-gold-300" />
+                <h3 className="mt-2 font-bold">شهادة توصية</h3>
+                <p className="text-xs text-white/70 mt-1">شهادة معتمدة من مساري بإنجاز التحليل</p>
+              </div>
+            </div>
+
+            <Link
+              href={`/pay/${report.id}`}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-l from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-white px-6 py-3.5 font-bold shadow-lg shadow-gold-600/30 transition hover:scale-105 active:scale-95"
+            >
+              <Sparkles className="w-4 h-4" />
+              فعّل الميزات بـ ٥٠ ريال
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <p className="mt-3 text-xs text-white/60">دفعة واحدة — لا اشتراك شهري</p>
+          </div>
+        </section>
+      )}
+
+      {/* Paid badge */}
+      {isPaid && (
+        <section className="no-print rounded-2xl bg-gradient-to-l from-green-50 to-emerald-50 border border-green-200 p-4 flex items-center gap-3 animate-fade-in">
+          <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <div className="font-bold text-green-800 text-sm">النسخة الكاملة مفعّلة</div>
+            <p className="text-xs text-green-700 mt-0.5">يمكنك تنزيل التقرير وشهادة التوصية</p>
+          </div>
+          <Link
+            href={`/certificate/${report.id}`}
+            target="_blank"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-white text-green-700 hover:bg-green-100 px-3 py-2 text-xs font-bold transition"
+          >
+            <Award className="w-4 h-4" /> الشهادة
+          </Link>
         </section>
       )}
     </div>

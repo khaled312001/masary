@@ -60,13 +60,13 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-7 flex flex-wrap justify-center lg:justify-start gap-3 animate-slide-up" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
-                  <Link href="/admin/login" className="btn-primary !py-3.5 !px-6 text-base">
+                  <Link href="/analyze" className="btn-primary !py-3.5 !px-7 text-base">
                     <Sparkles className="w-4 h-4" />
-                    دخول الإدارة
+                    ابدأ التحليل الآن
+                    <ArrowLeft className="w-4 h-4" />
                   </Link>
                   <Link href="#how" className="btn-secondary !py-3.5 !px-6 text-base">
                     كيف يعمل؟
-                    <ArrowLeft className="w-4 h-4" />
                   </Link>
                 </div>
 
@@ -333,22 +333,28 @@ export default function HomePage() {
 
             <div className="relative grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <ShieldCheck className="w-12 h-12 text-gold-300" />
-                <h3 className="mt-4 text-2xl md:text-3xl font-extrabold">منصة بدخول مُدار</h3>
+                <Sparkles className="w-12 h-12 text-gold-300" />
+                <h3 className="mt-4 text-2xl md:text-3xl font-extrabold">جاهز لتحليل مسارك؟</h3>
                 <p className="mt-3 text-white/80 max-w-md">
-                  التقارير تُصدَر فقط من قِبل المشرفين المعتمدين لضمان الجودة والدقة.
-                  إذا كنت مشرفاً، ادخل لوحة التحكم لإصدار تقرير جديد.
+                  املأ بياناتك واحصل على تقرير ذكي مفصّل بمسار تعلم مخصّص خلال أقل من دقيقة.
                 </p>
               </div>
-              <div className="md:text-left">
+              <div className="md:text-left flex flex-col gap-3 md:items-start">
                 <Link
-                  href="/admin/login"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white text-brand-800 hover:bg-gold-50 px-6 py-3.5 font-bold shadow-lg shadow-black/10 transition hover:scale-105 active:scale-95"
+                  href="/analyze"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand-800 hover:bg-gold-50 px-6 py-3.5 font-bold shadow-lg shadow-black/10 transition hover:scale-105 active:scale-95 w-full md:w-auto"
                 >
-                  دخول لوحة التحكم
+                  <Sparkles className="w-4 h-4" />
+                  ابدأ التحليل الآن
                   <ArrowLeft className="w-4 h-4" />
                 </Link>
-                <p className="mt-3 text-xs text-white/60">للمشرفين المعتمدين فقط</p>
+                <Link
+                  href="/admin/login"
+                  className="inline-flex items-center justify-center gap-2 text-xs text-white/70 hover:text-white transition"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  دخول الإدارة
+                </Link>
               </div>
             </div>
           </div>
