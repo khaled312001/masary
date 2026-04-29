@@ -23,6 +23,8 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7
     });
+    // Clean up legacy cookie from older deployments
+    cookies().delete("masary_admin");
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {
