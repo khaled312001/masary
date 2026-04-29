@@ -104,13 +104,7 @@ export async function analyzeWithClaude(input: AnalysisInput): Promise<AnalysisR
     model: ANALYSIS_MODEL,
     max_tokens: 4000,
     temperature: 0.3,
-    system: [
-      {
-        type: "text",
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" }
-      }
-    ],
+    system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }]
   });
 
