@@ -110,7 +110,7 @@ export function CoursesAdmin({
         skillIds: draft.skillIds
       };
       const res = await fetch(
-        editing ? `/api/admin/courses/${editing.id}` : "/api/admin/courses",
+        editing ? `/api/proxy/api/courses/${editing.id}` : "/api/proxy/api/courses",
         {
           method: editing ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -132,7 +132,7 @@ export function CoursesAdmin({
     if (!confirm("حذف هذا الكورس؟")) return;
     setWorking(true);
     try {
-      const res = await fetch(`/api/admin/courses/${r.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/proxy/api/courses/${r.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "تعذر الحذف");

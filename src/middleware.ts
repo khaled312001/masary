@@ -1,16 +1,29 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/jwt";
+import { jwtVerify } from "jose";
 
 export const config = {
   matcher: ["/admin/:path*"]
 };
 
+const TOKEN_COOKIE = "masary_admin_token";
+
+async function verify(token: string) {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret || secret.length < 16) return null;
+  try {
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (pathname === "/admin/login") return NextResponse.next();
 
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const session = token ? await verifySession(token) : null;
+  const token = req.cookies.get(TOKEN_COOKIE)?.value;
+  const session = token ? await verify(token) : null;
 
   if (!session) {
     const url = req.nextUrl.clone();

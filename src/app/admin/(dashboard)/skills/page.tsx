@@ -1,15 +1,18 @@
-import { prisma } from "@/lib/prisma";
 import { CrudTable } from "@/components/admin/CrudTable";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+type Skill = { id: string; nameAr: string; nameEn: string | null; category: string | null };
+
 export default async function SkillsPage() {
-  const rows = await prisma.skill.findMany({ orderBy: { nameAr: "asc" } }).catch(() => []);
+  const { data } = await apiServerSafe<Skill[]>("/api/skills");
+  const rows = (data ?? []).map((r) => ({ ...r }));
   return (
     <CrudTable
       title="المهارات"
-      endpoint="/api/admin/skills"
-      rows={rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }))}
+      endpoint="/api/proxy/api/skills"
+      rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم بالعربية" },
         { key: "nameEn", label: "الاسم بالإنجليزية" },

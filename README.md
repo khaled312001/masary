@@ -1,139 +1,73 @@
-# مساري — Masary
+# مساري — Frontend (Next.js)
 
-منصة ذكية لتحليل فجوة المهارات الوظيفية بالذكاء الاصطناعي، موجهة للسوق السعودي والخليجي.
+واجهة منصة "مساري" المبنية بـ Next.js 14. لا تتصل بقاعدة البيانات مباشرة — كل البيانات تأتي من الباك إند.
 
-تتيح للمستخدم إدخال المسمى الوظيفي المستهدف ومهاراته الحالية، فتُصدر له تقريراً مفصلاً بالفجوة بين مهاراته والمتطلبات، مع رسم مسار تعلم مخصص ودورات مقترحة بروابطها.
+## الباك إند منفصل
 
-## المزايا
+الباك إند موجود في **ريبو git مستقل** على المسار: `e:\masary-backend\`
 
-- 🤖 تحليل بالذكاء الاصطناعي (Claude Sonnet 4.6)
-- 🎯 تقرير مفصل بنسبة التطابق والفجوات والمسار التعليمي
-- 🧠 لوحة تحكم كاملة للمشرفين لإدارة الوظائف، المهارات، الكورسات، الشركات، والمنصات
-- 🌐 واجهة عربية احترافية RTL مناسبة للهاتف
-- 🚀 جاهز للنشر على Vercel
-- 🗄️ قاعدة بيانات MySQL (Hostinger) عبر Prisma
+- **الباك إند:** Express + Prisma + MySQL + Claude AI
+- **الفرونت إند:** Next.js 14 (هذا الريبو) — UI فقط
 
 ## التشغيل المحلي
 
-### 1. تثبيت الاعتماديات
-
 ```bash
+# 1. شغّل الباك إند أولاً (في ريبو منفصل)
+cd ../masary-backend
 npm install
+npm run dev   # على http://localhost:4000
+
+# 2. هنا في الفرونت إند
+cp .env.example .env
+# عدّل API_URL ليشير للباك إند
+npm install
+npm run dev   # على http://localhost:3000
 ```
 
-### 2. إعداد ملف البيئة
+## متغيرات البيئة
 
-انسخ `.env.example` إلى `.env` وعبّئ القيم:
-
-```env
-DATABASE_URL="mysql://user:password@host:3306/database"
-ANTHROPIC_API_KEY="sk-ant-..."
-ADMIN_EMAIL="admin@masary.sa"
-ADMIN_PASSWORD="ChangeMe!2026"
-AUTH_SECRET="please-replace-with-a-long-random-32-byte-secret"
-```
-
-> 💡 يدعم المشروع MySQL (Hostinger، PlanetScale، أي MySQL 5.7+).
-
-### 3. إنشاء جداول قاعدة البيانات
-
-```bash
-npm run db:push
-```
-
-### 4. تعبئة البيانات الأولية (شركات سعودية + كورسات + مهارات + وظائف)
-
-```bash
-npm run db:seed
-```
-
-### 5. تشغيل المنصة
-
-```bash
-npm run dev
-```
-
-افتح [http://localhost:3000](http://localhost:3000)
-
-- **الواجهة العامة:** `/`
-- **نموذج التحليل:** `/analyze`
-- **لوحة التحكم:** `/admin/login`
+| المتغير | القيمة |
+|---------|--------|
+| `API_URL` | `http://localhost:4000` (server-side fetch) |
+| `NEXT_PUBLIC_API_URL` | نفس الرابط (للمتصفح) |
+| `AUTH_SECRET` | **يجب أن تكون نفس قيمة AUTH_SECRET في الباك إند** |
 
 ## النشر على Vercel
 
-### الطريقة السريعة
+1. ادفع الريبو على GitHub.
+2. أنشئ Project في Vercel من الريبو.
+3. أضف Environment Variables:
+   - `API_URL` = `https://api.masary.sa` (رابط الباك إند المنشور)
+   - `NEXT_PUBLIC_API_URL` = نفس الرابط
+   - `AUTH_SECRET` = نفس قيمة الباك إند
+4. Deploy.
 
-1. ارفع المشروع على GitHub.
-2. ادخل [vercel.com](https://vercel.com) وأنشئ مشروعاً جديداً مرتبطاً بالـ repo.
-3. أضف متغيرات البيئة في إعدادات Vercel:
-   - `DATABASE_URL`
-   - `ANTHROPIC_API_KEY`
-   - `ADMIN_EMAIL`
-   - `ADMIN_PASSWORD`
-   - `AUTH_SECRET`
-4. اضغط Deploy. سيتم تنفيذ `prisma generate && next build` تلقائياً.
-
-### بعد أول نشر
-
-شغّل Migration والSeed مرة واحدة محلياً (مع نفس DATABASE_URL):
-
-```bash
-npm run db:push
-npm run db:seed
-```
-
-أو من خلال Vercel CLI / Vercel Postgres Dashboard.
-
-## الاعتماديات الرئيسية
-
-| الفئة | المكتبة |
-|------|---------|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript |
-| Styling | Tailwind CSS |
-| Database | Prisma + MySQL |
-| AI | @anthropic-ai/sdk (Claude Sonnet 4.6) |
-| Auth | jose (JWT) للأدمن |
-| Validation | Zod |
-| Icons | lucide-react |
-
-## هيكل المشروع
+## بنية الكود
 
 ```
 src/
 ├── app/
-│   ├── page.tsx                 # الصفحة الرئيسية
-│   ├── analyze/                 # نموذج التحليل
-│   ├── report/[id]/             # عرض التقرير
-│   ├── admin/                   # لوحة التحكم
-│   │   ├── jobs/
-│   │   ├── skills/
-│   │   ├── courses/
-│   │   ├── companies/
-│   │   ├── platforms/
-│   │   └── reports/
+│   ├── page.tsx                  # الصفحة الرئيسية
+│   ├── admin/
+│   │   ├── login/                # تسجيل دخول الإدارة
+│   │   └── (dashboard)/          # لوحة التحكم (محمية)
+│   ├── report/[id]/              # عرض التقرير العام
 │   └── api/
-│       ├── analyze/             # تحليل بالذكاء الاصطناعي
-│       └── admin/               # CRUD APIs
-├── components/                   # مكونات UI
-├── lib/                          # ai, prisma, auth helpers
-└── middleware.ts                 # حماية مسارات /admin
-
-prisma/
-├── schema.prisma                 # مخطط القاعدة
-└── seed.ts                       # بيانات أولية للسوق السعودي
+│       ├── admin/login           # يستدعي الباك إند ويحفظ التوكن في cookie
+│       ├── admin/logout          # يحذف التوكن
+│       └── proxy/[...path]       # proxy للباك إند مع توكن من cookie
+├── components/                    # UI
+├── lib/api.ts                     # API client (يستهلك الباك إند)
+├── types/report.ts                # أنواع التقرير
+└── middleware.ts                  # حماية مسارات /admin
 ```
 
-## ملاحظات أمنية
+## كيف تعمل المصادقة
 
-- لا تشارك `AUTH_SECRET` أو `ADMIN_PASSWORD`.
-- في الإنتاج، استبدل `ADMIN_PASSWORD` بكلمة قوية.
-- تأكد أن `DATABASE_URL` يستخدم SSL (`sslmode=require`).
-
-## الدعم
-
-لأي ملاحظات أو تطوير إضافي، تواصل مع فريق التطوير.
-
----
-
-© مساري — مسارك المهني يبدأ من هنا
+1. المستخدم يسجل دخوله من `/admin/login`
+2. Next.js يستدعي `POST /api/admin/login` (route handler هنا)
+3. الـ route handler يستدعي الباك إند: `POST {API_URL}/api/auth/login`
+4. الباك إند يرجع `token` (JWT)
+5. الفرونت إند يحفظ الـ token في **httpOnly cookie**
+6. أي طلب لـ `/api/proxy/...` يقرأ الـ token من الـ cookie ويُعيد توجيهه للباك إند مع `Authorization: Bearer ...`
+7. middleware يتحقق من صلاحية الـ token قبل السماح بالوصول لـ `/admin/*`

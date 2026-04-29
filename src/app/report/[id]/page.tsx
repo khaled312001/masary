@@ -1,17 +1,29 @@
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { prisma } from "@/lib/prisma";
-import type { AnalysisReport } from "@/lib/ai";
+import { apiFetch } from "@/lib/api";
+import type { AnalysisReport } from "@/types/report";
 import { ReportView } from "./ReportView";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReportPage({ params }: { params: { id: string } }) {
-  const report = await prisma.report.findUnique({ where: { id: params.id } }).catch(() => null);
-  if (!report) notFound();
+type ReportRow = {
+  id: string;
+  fullName: string;
+  jobTitle: string;
+  employer: string | null;
+  createdAt: string;
+  data: AnalysisReport;
+};
 
-  const data = report.data as unknown as AnalysisReport;
+export default async function ReportPage({ params }: { params: { id: string } }) {
+  let report: ReportRow | null = null;
+  try {
+    report = await apiFetch<ReportRow>(`/api/reports/${params.id}`);
+  } catch {
+    notFound();
+  }
+  if (!report) notFound();
 
   return (
     <>
@@ -23,8 +35,8 @@ export default async function ReportPage({ params }: { params: { id: string } })
             fullName: report.fullName,
             jobTitle: report.jobTitle,
             employer: report.employer,
-            createdAt: report.createdAt.toISOString(),
-            data
+            createdAt: report.createdAt,
+            data: report.data
           }}
         />
       </main>

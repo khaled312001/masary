@@ -1,15 +1,18 @@
-import { prisma } from "@/lib/prisma";
 import { CrudTable } from "@/components/admin/CrudTable";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+type Company = { id: string; nameAr: string; nameEn: string | null; industry: string | null; website: string | null };
+
 export default async function CompaniesPage() {
-  const rows = await prisma.company.findMany({ orderBy: { nameAr: "asc" } }).catch(() => []);
+  const { data } = await apiServerSafe<Company[]>("/api/companies");
+  const rows = data ?? [];
   return (
     <CrudTable
       title="الشركات وجهات العمل"
-      endpoint="/api/admin/companies"
-      rows={rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }))}
+      endpoint="/api/proxy/api/companies"
+      rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم" },
         { key: "industry", label: "القطاع" },

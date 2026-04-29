@@ -1,13 +1,20 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { apiServerSafe } from "@/lib/api";
 import { ExternalLink } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+type Report = {
+  id: string;
+  fullName: string;
+  jobTitle: string;
+  employer: string | null;
+  createdAt: string;
+};
+
 export default async function ReportsAdminPage() {
-  const reports = await prisma.report
-    .findMany({ orderBy: { createdAt: "desc" }, take: 200 })
-    .catch(() => []);
+  const { data } = await apiServerSafe<Report[]>("/api/reports");
+  const reports = data ?? [];
 
   return (
     <div className="space-y-5">

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnalysisReport } from "@/lib/ai";
+import type { AnalysisReport } from "@/types/report";
 import {
   CheckCircle2,
   XCircle,

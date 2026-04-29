@@ -1,14 +1,20 @@
-import { prisma } from "@/lib/prisma";
 import { AnalyzeForm } from "./AnalyzeForm";
+import { apiServerSafe } from "@/lib/api";
 import { Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+type Job = { id: string; titleAr: string };
+type Company = { id: string; nameAr: string };
+
 export default async function AnalyzePage() {
-  const [jobs, companies] = await Promise.all([
-    prisma.job.findMany({ select: { id: true, titleAr: true }, orderBy: { titleAr: "asc" } }).catch(() => []),
-    prisma.company.findMany({ select: { id: true, nameAr: true }, orderBy: { nameAr: "asc" } }).catch(() => [])
+  const [jobsRes, companiesRes] = await Promise.all([
+    apiServerSafe<Job[]>("/api/jobs"),
+    apiServerSafe<Company[]>("/api/companies")
   ]);
+
+  const jobs = (jobsRes.data ?? []).map((j) => ({ id: j.id, titleAr: j.titleAr }));
+  const companies = (companiesRes.data ?? []).map((c) => ({ id: c.id, nameAr: c.nameAr }));
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

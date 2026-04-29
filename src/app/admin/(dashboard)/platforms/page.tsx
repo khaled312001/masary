@@ -1,14 +1,17 @@
-import { prisma } from "@/lib/prisma";
 import { CrudTable } from "@/components/admin/CrudTable";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+type Platform = { id: string; nameAr: string; nameEn: string | null; website: string | null };
+
 export default async function PlatformsPage() {
-  const rows = await prisma.platform.findMany({ orderBy: { nameAr: "asc" } }).catch(() => []);
+  const { data } = await apiServerSafe<Platform[]>("/api/platforms");
+  const rows = data ?? [];
   return (
     <CrudTable
       title="منصات التعلم"
-      endpoint="/api/admin/platforms"
+      endpoint="/api/proxy/api/platforms"
       rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم" },

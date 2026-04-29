@@ -1,30 +1,28 @@
-import { prisma } from "@/lib/prisma";
 import { JobsAdmin } from "./JobsAdmin";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
+type Job = {
+  id: string;
+  titleAr: string;
+  titleEn: string | null;
+  descriptionAr: string;
+  category: string | null;
+  level: string | null;
+  skills: { skillId: string; nameAr: string; importance: number }[];
+};
+type Skill = { id: string; nameAr: string };
+
 export default async function JobsPage() {
-  const [jobs, skills] = await Promise.all([
-    prisma.job.findMany({
-      orderBy: { titleAr: "asc" },
-      include: { skills: { include: { skill: { select: { id: true, nameAr: true } } } } }
-    }).catch(() => []),
-    prisma.skill.findMany({ orderBy: { nameAr: "asc" } }).catch(() => [])
+  const [jobsRes, skillsRes] = await Promise.all([
+    apiServerSafe<Job[]>("/api/jobs"),
+    apiServerSafe<Skill[]>("/api/skills")
   ]);
-
-  const rows = jobs.map((j) => ({
-    id: j.id,
-    titleAr: j.titleAr,
-    titleEn: j.titleEn,
-    descriptionAr: j.descriptionAr,
-    category: j.category,
-    level: j.level,
-    skills: j.skills.map((js) => ({
-      skillId: js.skillId,
-      nameAr: js.skill.nameAr,
-      importance: js.importance
-    }))
-  }));
-
-  return <JobsAdmin rows={rows} skills={skills.map((s) => ({ id: s.id, nameAr: s.nameAr }))} />;
+  return (
+    <JobsAdmin
+      rows={jobsRes.data ?? []}
+      skills={(skillsRes.data ?? []).map((s) => ({ id: s.id, nameAr: s.nameAr }))}
+    />
+  );
 }

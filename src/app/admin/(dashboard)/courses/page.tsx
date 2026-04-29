@@ -1,42 +1,38 @@
-import { prisma } from "@/lib/prisma";
 import { CoursesAdmin } from "./CoursesAdmin";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export default async function CoursesPage() {
-  const [courses, platforms, skills] = await Promise.all([
-    prisma.course.findMany({
-      orderBy: { titleAr: "asc" },
-      include: {
-        platform: { select: { id: true, nameAr: true } },
-        skills: { include: { skill: { select: { id: true, nameAr: true } } } }
-      }
-    }).catch(() => []),
-    prisma.platform.findMany({ orderBy: { nameAr: "asc" } }).catch(() => []),
-    prisma.skill.findMany({ orderBy: { nameAr: "asc" } }).catch(() => [])
-  ]);
+type Course = {
+  id: string;
+  titleAr: string;
+  titleEn: string | null;
+  description: string | null;
+  url: string | null;
+  durationHrs: number | null;
+  level: string | null;
+  isFree: boolean;
+  language: string | null;
+  platformId: string | null;
+  platformName: string | null;
+  skillIds: string[];
+  skillNames: string[];
+};
+type Platform = { id: string; nameAr: string };
+type Skill = { id: string; nameAr: string };
 
-  const rows = courses.map((c) => ({
-    id: c.id,
-    titleAr: c.titleAr,
-    titleEn: c.titleEn,
-    description: c.description,
-    url: c.url,
-    durationHrs: c.durationHrs,
-    level: c.level,
-    isFree: c.isFree,
-    language: c.language,
-    platformId: c.platformId,
-    platformName: c.platform?.nameAr ?? null,
-    skillIds: c.skills.map((s) => s.skill.id),
-    skillNames: c.skills.map((s) => s.skill.nameAr)
-  }));
+export default async function CoursesPage() {
+  const [coursesRes, platformsRes, skillsRes] = await Promise.all([
+    apiServerSafe<Course[]>("/api/courses"),
+    apiServerSafe<Platform[]>("/api/platforms"),
+    apiServerSafe<Skill[]>("/api/skills")
+  ]);
 
   return (
     <CoursesAdmin
-      rows={rows}
-      platforms={platforms.map((p) => ({ id: p.id, nameAr: p.nameAr }))}
-      skills={skills.map((s) => ({ id: s.id, nameAr: s.nameAr }))}
+      rows={coursesRes.data ?? []}
+      platforms={(platformsRes.data ?? []).map((p) => ({ id: p.id, nameAr: p.nameAr }))}
+      skills={(skillsRes.data ?? []).map((s) => ({ id: s.id, nameAr: s.nameAr }))}
     />
   );
 }

@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import {
   Briefcase,
@@ -12,47 +11,23 @@ import {
   ArrowLeft,
   AlertTriangle
 } from "lucide-react";
+import { apiServerSafe } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-type Data = {
-  jobs: number;
-  skills: number;
-  courses: number;
-  platforms: number;
-  companies: number;
-  reports: number;
-  latestReports: { id: string; fullName: string; jobTitle: string; createdAt: Date }[];
-  error?: string;
-};
-
-async function getData(): Promise<Data> {
-  try {
-    const [jobs, skills, courses, platforms, companies, reports, latestReports] = await Promise.all([
-      prisma.job.count(),
-      prisma.skill.count(),
-      prisma.course.count(),
-      prisma.platform.count(),
-      prisma.company.count(),
-      prisma.report.count(),
-      prisma.report.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: { id: true, fullName: true, jobTitle: true, createdAt: true }
-      })
-    ]);
-    return { jobs, skills, courses, platforms, companies, reports, latestReports };
-  } catch (e: any) {
-    return {
-      jobs: 0, skills: 0, courses: 0, platforms: 0, companies: 0, reports: 0,
-      latestReports: [],
-      error: e?.message ?? "تعذر الاتصال بقاعدة البيانات"
-    };
-  }
-}
+type Stats = { jobs: number; skills: number; courses: number; platforms: number; companies: number; reports: number };
+type LatestReport = { id: string; fullName: string; jobTitle: string; createdAt: string };
 
 export default async function AdminHome() {
-  const data = await getData();
+  const [stats, latest] = await Promise.all([
+    apiServerSafe<Stats>("/api/stats"),
+    apiServerSafe<LatestReport[]>("/api/reports/latest")
+  ]);
+
+  const data = stats.data ?? { jobs: 0, skills: 0, courses: 0, platforms: 0, companies: 0, reports: 0 };
+  const latestReports = latest.data ?? [];
+  const error = stats.error || latest.error;
+
   const cards = [
     { href: "/admin/jobs", label: "الوظائف", count: data.jobs, icon: Briefcase, color: "from-blue-500 to-blue-700", bg: "bg-blue-50" },
     { href: "/admin/skills", label: "المهارات", count: data.skills, icon: Wrench, color: "from-purple-500 to-purple-700", bg: "bg-purple-50" },
@@ -64,22 +39,19 @@ export default async function AdminHome() {
 
   return (
     <div className="space-y-6">
-      {data.error && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+      {error && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 animate-fade-in">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <div className="font-bold">تعذر الاتصال بقاعدة البيانات</div>
+              <div className="font-bold">تعذر الاتصال بالـ API</div>
               <p className="text-sm mt-1 opacity-90">
-                تحقق من <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">DATABASE_URL</code> في
-                إعدادات Vercel، ومن تفعيل <strong>Any Host</strong> في Hostinger Remote MySQL.
+                تحقق من <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">API_URL</code> /
+                <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs"> NEXT_PUBLIC_API_URL</code> في إعدادات Vercel.
               </p>
               <p className="text-xs mt-2 opacity-70 break-all">
-                <strong>التفاصيل:</strong> {data.error}
+                <strong>التفاصيل:</strong> {error}
               </p>
-              <a href="/api/healthz" target="_blank" className="text-xs mt-2 inline-block text-amber-700 hover:underline">
-                افتح /api/healthz للتشخيص الكامل ←
-              </a>
             </div>
           </div>
         </div>
@@ -142,13 +114,13 @@ export default async function AdminHome() {
             عرض الكل
           </Link>
         </div>
-        {data.latestReports.length === 0 ? (
+        {latestReports.length === 0 ? (
           <div className="text-center py-8 text-stone-500 text-sm">
             لم يتم إنشاء تقارير بعد. ابدأ بإنشاء تحليل جديد.
           </div>
         ) : (
           <div className="space-y-2">
-            {data.latestReports.map((r) => (
+            {latestReports.map((r) => (
               <Link
                 key={r.id}
                 href={`/report/${r.id}`}
