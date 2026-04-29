@@ -16,18 +16,7 @@ export default async function CompaniesPage() {
       columns={[
         { key: "nameAr", label: "الاسم" },
         { key: "industry", label: "القطاع" },
-        {
-          key: "website",
-          label: "الموقع",
-          render: (r) =>
-            r.website ? (
-              <a href={r.website} target="_blank" rel="noreferrer" className="text-brand-700 hover:underline">
-                زيارة
-              </a>
-            ) : (
-              "—"
-            )
-        }
+        { key: "website", label: "الموقع", type: "url" }
       ]}
       fields={[
         { name: "nameAr", label: "الاسم بالعربية", required: true },

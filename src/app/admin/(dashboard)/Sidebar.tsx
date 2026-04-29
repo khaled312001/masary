@@ -13,6 +13,7 @@ import {
   FileText,
   Globe2,
   Sparkles,
+  Settings as SettingsIcon,
   type LucideIcon
 } from "lucide-react";
 
@@ -26,7 +27,8 @@ const navItems: NavItem[] = [
   { href: "/admin/courses", label: "الكورسات", icon: GraduationCap },
   { href: "/admin/platforms", label: "منصات التعلم", icon: Globe2 },
   { href: "/admin/companies", label: "الشركات", icon: Building2 },
-  { href: "/admin/reports", label: "التقارير", icon: FileText }
+  { href: "/admin/reports", label: "التقارير", icon: FileText },
+  { href: "/admin/settings", label: "الإعدادات", icon: SettingsIcon }
 ];
 
 export function Sidebar() {

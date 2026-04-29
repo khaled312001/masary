@@ -2,7 +2,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Trash2, Plus, X } from "lucide-react";
+import { Loader2, Pencil, Trash2, Plus, X, ExternalLink, Check } from "lucide-react";
+
+function renderCell(col: ColumnDef, row: Row) {
+  const v = row[col.key];
+  if (v === null || v === undefined || v === "") return "—";
+  if (col.type === "url") {
+    return (
+      <a
+        href={String(v)}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1 text-brand-700 hover:underline"
+      >
+        زيارة <ExternalLink className="w-3 h-3" />
+      </a>
+    );
+  }
+  if (col.type === "bool") {
+    return v ? <Check className="w-4 h-4 text-green-600" /> : "—";
+  }
+  return String(v);
+}
 
 export type FieldDef = {
   name: string;
@@ -15,6 +36,15 @@ export type FieldDef = {
 
 export type Row = Record<string, any> & { id: string };
 
+export type ColumnDef = {
+  key: string;
+  label: string;
+  /** url: render value as a clickable link to that URL.
+   *  bool: render as ✅/—.
+   *  Default: render value as text. */
+  type?: "text" | "url" | "bool";
+};
+
 export function CrudTable({
   title,
   endpoint,
@@ -23,10 +53,10 @@ export function CrudTable({
   columns
 }: {
   title: string;
-  endpoint: string; // e.g. /api/admin/skills
+  endpoint: string;
   fields: FieldDef[];
   rows: Row[];
-  columns: { key: string; label: string; render?: (row: Row) => React.ReactNode }[];
+  columns: ColumnDef[];
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Row | null>(null);
@@ -149,7 +179,7 @@ export function CrudTable({
                 <tr key={r.id} className="border-t border-stone-100 hover:bg-stone-50">
                   {columns.map((c) => (
                     <td key={c.key} className="p-3 text-stone-800">
-                      {c.render ? c.render(r) : (r[c.key] ?? "—")}
+                      {renderCell(c, r)}
                     </td>
                   ))}
                   <td className="p-3 text-left">
