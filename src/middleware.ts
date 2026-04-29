@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/auth";
+import { verifySession, SESSION_COOKIE } from "@/lib/jwt";
 
 export const config = {
   matcher: ["/admin/:path*"]

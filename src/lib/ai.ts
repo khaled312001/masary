@@ -104,13 +104,18 @@ export async function analyzeWithClaude(input: AnalysisInput): Promise<AnalysisR
     model: ANALYSIS_MODEL,
     max_tokens: 4000,
     temperature: 0.3,
-    system: SYSTEM_PROMPT,
+    system: [
+      {
+        type: "text",
+        text: SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" }
+      }
+    ],
     messages: [{ role: "user", content: userMessage }]
   });
 
   const text = response.content
-    .filter((c): c is Anthropic.TextBlock => c.type === "text")
-    .map((c) => c.text)
+    .map((c) => (c.type === "text" ? c.text : ""))
     .join("\n")
     .trim();
 

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Logo } from "@/components/Logo";
 import { LoginForm } from "./LoginForm";
 import Link from "next/link";
@@ -17,7 +18,9 @@ export default function AdminLoginPage() {
           <h1 className="text-2xl font-extrabold text-stone-900 text-center">دخول لوحة التحكم</h1>
           <p className="text-stone-500 text-sm text-center mt-1">للمشرفين فقط</p>
           <div className="mt-6">
-            <LoginForm />
+            <Suspense fallback={<div className="h-40" />}>
+              <LoginForm />
+            </Suspense>
           </div>
         </div>
         <p className="mt-4 text-center text-xs text-stone-500">
