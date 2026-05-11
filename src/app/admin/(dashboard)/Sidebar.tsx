@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Building2,
   FileText,
+  Bot,
   Globe2,
   Sparkles,
   Settings as SettingsIcon,
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
   { href: "/admin/platforms", label: "منصات التعلم", icon: Globe2 },
   { href: "/admin/companies", label: "الشركات", icon: Building2 },
   { href: "/admin/reports", label: "التقارير", icon: FileText },
+  { href: "/admin/claude", label: "تقارير Claude", icon: Bot },
   { href: "/admin/settings", label: "الإعدادات", icon: SettingsIcon }
 ];
 
