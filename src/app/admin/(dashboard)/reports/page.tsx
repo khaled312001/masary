@@ -10,6 +10,10 @@ type Report = {
   fullName: string;
   jobTitle: string;
   employer: string | null;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  claudeModel?: string | null;
   isPaid: boolean;
   createdAt: string;
 };
@@ -32,6 +36,7 @@ export default async function ReportsAdminPage() {
                 <th className="text-right p-3 font-semibold">الاسم</th>
                 <th className="text-right p-3 font-semibold">المسمى</th>
                 <th className="text-right p-3 font-semibold">الجهة</th>
+                <th className="text-right p-3 font-semibold">توكنز Claude</th>
                 <th className="text-right p-3 font-semibold">الحالة</th>
                 <th className="text-right p-3 font-semibold">التاريخ</th>
                 <th className="p-3"></th>
@@ -40,7 +45,7 @@ export default async function ReportsAdminPage() {
             <tbody>
               {reports.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-stone-500">
+                  <td colSpan={7} className="p-8 text-center text-stone-500">
                     لم يتم إنشاء تقارير بعد
                   </td>
                 </tr>
@@ -50,6 +55,13 @@ export default async function ReportsAdminPage() {
                   <td className="p-3 font-semibold text-stone-900">{r.fullName}</td>
                   <td className="p-3 text-stone-700">{r.jobTitle}</td>
                   <td className="p-3 text-stone-700">{r.employer ?? "—"}</td>
+                  <td className="p-3 text-stone-700">
+                    <div className="font-semibold">{formatNumber(r.totalTokens ?? 0)}</div>
+                    <div className="text-[11px] text-stone-400">
+                      in {formatNumber(r.inputTokens ?? 0)} / out {formatNumber(r.outputTokens ?? 0)}
+                    </div>
+                    {r.claudeModel && <div className="text-[10px] text-stone-400">{r.claudeModel}</div>}
+                  </td>
                   <td className="p-3">
                     <PaidToggle id={r.id} isPaid={r.isPaid} />
                   </td>
@@ -73,4 +85,8 @@ export default async function ReportsAdminPage() {
       </div>
     </div>
   );
+}
+
+function formatNumber(value: number) {
+  return value ? value.toLocaleString("en-US") : "—";
 }

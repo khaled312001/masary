@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, User2, Briefcase, Building2, Wrench, BookOpen, Brain } from "lucide-react";
+import { Loader2, Sparkles, User2, Briefcase, Building2, Wrench, BookOpen, Brain, FileText } from "lucide-react";
 
 type Option = { id: string; titleAr?: string; nameAr?: string };
 
@@ -17,6 +17,7 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
     currentSkills: "",
     currentCourses: ""
   });
+  const [cvFile, setCvFile] = useState<File | null>(null);
 
   function update<K extends keyof typeof form>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -25,17 +26,21 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.fullName.trim() || !form.jobTitle.trim() || !form.currentSkills.trim()) {
-      setError("الرجاء تعبئة الحقول الأساسية: الاسم والمسمى الوظيفي والمهارات الحالية.");
+    if (!form.fullName.trim() || !form.jobTitle.trim() || (!form.currentSkills.trim() && !cvFile)) {
+      setError("الرجاء تعبئة الاسم والمسمى الوظيفي، ثم إدخال المهارات أو رفع السيرة الذاتية.");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/proxy/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form)
-      });
+      const body = new FormData();
+      body.set("fullName", form.fullName.trim());
+      body.set("jobTitle", form.jobTitle.trim());
+      if (form.employer.trim()) body.set("employer", form.employer.trim());
+      if (form.currentSkills.trim()) body.set("currentSkills", form.currentSkills.trim());
+      if (form.currentCourses.trim()) body.set("currentCourses", form.currentCourses.trim());
+      if (cvFile) body.set("cv", cvFile);
+
+      const res = await fetch("/api/proxy/api/analyze", { method: "POST", body });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "حدث خطأ غير متوقع");
       router.push(`/report/${data.id}`);
@@ -110,13 +115,22 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
         </datalist>
       </Field>
 
-      <Field icon={Wrench} label="مهارات المستخدم الحالية" required hint="افصل المهارات بفاصلة: SQL, Excel, Python, التحليل المالي">
+      <Field icon={Wrench} label="مهارات المستخدم الحالية" required={!cvFile} hint="افصل المهارات بفاصلة. سنصححها للأقرب ونضيف الجديد.">
         <textarea
           className="input min-h-28 resize-y"
           placeholder="مثال: التواصل، Excel، تحليل البيانات، اللغة الإنجليزية..."
           value={form.currentSkills}
           onChange={(e) => update("currentSkills", e.target.value)}
           maxLength={2000}
+        />
+      </Field>
+
+      <Field icon={FileText} label="السيرة الذاتية" hint="اختياري — PDF أو Word أو صورة لاستخراج المهارات والكورسات">
+        <input
+          className="input file:ml-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700"
+          type="file"
+          accept=".pdf,.doc,.docx,image/png,image/jpeg,image/webp"
+          onChange={(e) => setCvFile(e.target.files?.[0] ?? null)}
         />
       </Field>
 

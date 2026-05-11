@@ -9,16 +9,24 @@ async function proxy(req: Request, params: { path: string[] }, method: string) {
   const url = new URL(req.url);
   const queryString = url.search;
   const token = getServerToken();
+  const contentType = req.headers.get("content-type");
 
   let body: any = undefined;
+  const headers: Record<string, string> = {};
   if (method !== "GET" && method !== "DELETE") {
-    body = await req.text();
+    if (contentType?.includes("multipart/form-data")) {
+      body = Buffer.from(await req.arrayBuffer());
+      headers["Content-Type"] = contentType;
+    } else {
+      body = await req.text();
+    }
   }
 
   try {
     const data = await apiFetch(path + queryString, {
       method,
       token,
+      headers,
       ...(body !== undefined ? { body } : {})
     });
     return NextResponse.json(data);
