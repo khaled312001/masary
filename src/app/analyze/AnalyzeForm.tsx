@@ -16,7 +16,7 @@ type FormState = {
 
 type Errors = Partial<Record<keyof FormState, string>>;
 
-export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Option[] }) {
+export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; companies: Option[]; skills: Option[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -29,10 +29,17 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
     currentCourses: ""
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const jobSuggestions = fuzzyOptions(jobs, form.jobTitle, "titleAr", 6);
+  const skillFragment = lastListFragment(form.currentSkills);
+  const skillSuggestions = fuzzyOptions(skills, skillFragment, "nameAr", 6);
 
   function update<K extends keyof FormState>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
+  }
+
+  function applySkillSuggestion(value: string) {
+    update("currentSkills", replaceLastListFragment(form.currentSkills, value));
   }
 
   function validate(): Errors {
@@ -131,19 +138,21 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
         hint="مثال: مهندس بيانات، أخصائي موارد بشرية، مطور ويب"
         error={errors.jobTitle}
       >
-        <input
-          list="jobs-list"
-          className={`input ${errors.jobTitle ? "!border-red-300 focus:!border-red-500 focus:!ring-red-100" : ""}`}
-          placeholder="اكتب المسمى الوظيفي"
-          value={form.jobTitle}
-          onChange={(e) => update("jobTitle", e.target.value)}
-          maxLength={120}
-        />
-        <datalist id="jobs-list">
-          {jobs.map((j) => (
-            <option key={j.id} value={j.titleAr} />
-          ))}
-        </datalist>
+        <div className="relative">
+          <input
+            className={`input ${errors.jobTitle ? "!border-red-300 focus:!border-red-500 focus:!ring-red-100" : ""}`}
+            placeholder="اكتب المسمى الوظيفي"
+            value={form.jobTitle}
+            onChange={(e) => update("jobTitle", e.target.value)}
+            maxLength={120}
+            autoComplete="off"
+          />
+          <SuggestionList
+            options={jobSuggestions}
+            getLabel={(item) => item.titleAr ?? ""}
+            onPick={(value) => update("jobTitle", value)}
+          />
+        </div>
       </Field>
 
       <Field
@@ -181,6 +190,11 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
           value={form.currentSkills}
           onChange={(e) => update("currentSkills", e.target.value)}
           maxLength={2000}
+        />
+        <SuggestionList
+          options={skillSuggestions}
+          getLabel={(item) => item.nameAr ?? ""}
+          onPick={applySkillSuggestion}
         />
         <div className="text-[11px] text-stone-400 mt-1">{form.currentSkills.length} / 2000</div>
       </Field>
@@ -233,6 +247,41 @@ export function AnalyzeForm({ jobs, companies }: { jobs: Option[]; companies: Op
   );
 }
 
+function SuggestionList({
+  options,
+  getLabel,
+  onPick
+}: {
+  options: Option[];
+  getLabel: (item: Option) => string;
+  onPick: (value: string) => void;
+}) {
+  if (options.length === 0) return null;
+
+  return (
+    <div className="relative z-20">
+      <div className="absolute mt-1 w-full overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl">
+        {options.map((item) => {
+          const label = getLabel(item);
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className="block w-full px-3 py-2 text-right text-sm font-semibold text-stone-800 hover:bg-brand-50 hover:text-brand-700"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onPick(label);
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Field({
   name,
   icon: Icon,
@@ -280,4 +329,76 @@ function Step({ text, delay }: { text: string; delay: number }) {
       {text}
     </div>
   );
+}
+
+function fuzzyOptions(options: Option[], query: string, key: "titleAr" | "nameAr", limit: number) {
+  const q = normalizeArabic(query);
+  if (q.length < 2) return [];
+
+  return options
+    .map((item) => {
+      const label = item[key] ?? "";
+      return { item, label, score: similarity(q, normalizeArabic(label)) };
+    })
+    .filter((row) => row.label && normalizeArabic(row.label) !== q && row.score >= 0.45)
+    .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label, "ar"))
+    .slice(0, limit)
+    .map((row) => row.item);
+}
+
+function normalizeArabic(value: string) {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .trim()
+    .replace(/[إأٱآا]/g, "ا")
+    .replace(/[ىیي]/g, "ي")
+    .replace(/[كک]/g, "ك")
+    .replace(/[ةۀ]/g, "ه")
+    .replace(/ؤ/g, "و")
+    .replace(/ئ/g, "ي")
+    .replace(/ء/g, "")
+    .replace(/[ًٌٍَُِّْٰـ]/g, "")
+    .replace(/[ﻻﻷﻹﻵ]/g, "لا")
+    .replace(/[^\p{L}\p{N}\s+#.]/gu, " ")
+    .replace(/\s+/g, " ");
+}
+
+function similarity(a: string, b: string) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.includes(b) || b.includes(a)) {
+    return Math.min(0.96, Math.min(a.length, b.length) / Math.max(a.length, b.length) + 0.28);
+  }
+  const distance = levenshtein(a, b);
+  return Math.max(0, 1 - distance / Math.max(a.length, b.length));
+}
+
+function levenshtein(a: string, b: string) {
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const curr = Array.from({ length: b.length + 1 }, () => 0);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      curr[j] = Math.min(
+        prev[j] + 1,
+        curr[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    for (let j = 0; j <= b.length; j++) prev[j] = curr[j];
+  }
+  return prev[b.length];
+}
+
+function lastListFragment(value: string) {
+  const parts = value.split(/[,،؛;\n|]/g);
+  return parts[parts.length - 1]?.trim() ?? "";
+}
+
+function replaceLastListFragment(value: string, replacement: string) {
+  const match = value.match(/([,،؛;\n|]\s*)?([^,،؛;\n|]*)$/);
+  if (!match || match.index === undefined) return replacement;
+  const prefix = value.slice(0, match.index) + (match[1] ?? "");
+  return `${prefix}${replacement}`;
 }

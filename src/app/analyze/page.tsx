@@ -8,24 +8,27 @@ export const dynamic = "force-dynamic";
 
 type Job = { id: string; titleAr: string };
 type Company = { id: string; nameAr: string };
+type Skill = { id: string; nameAr: string };
 
 async function fetchOptions() {
   try {
-    const [jobs, companies] = await Promise.all([
+    const [jobs, companies, skills] = await Promise.all([
       apiFetch<Job[]>("/api/jobs").catch(() => []),
-      apiFetch<Company[]>("/api/companies").catch(() => [])
+      apiFetch<Company[]>("/api/companies").catch(() => []),
+      apiFetch<Skill[]>("/api/skills").catch(() => [])
     ]);
     return {
       jobs: (jobs ?? []).map((j) => ({ id: j.id, titleAr: j.titleAr })),
-      companies: (companies ?? []).map((c) => ({ id: c.id, nameAr: c.nameAr }))
+      companies: (companies ?? []).map((c) => ({ id: c.id, nameAr: c.nameAr })),
+      skills: (skills ?? []).map((s) => ({ id: s.id, nameAr: s.nameAr }))
     };
   } catch {
-    return { jobs: [], companies: [] };
+    return { jobs: [], companies: [], skills: [] };
   }
 }
 
 export default async function PublicAnalyzePage() {
-  const { jobs, companies } = await fetchOptions();
+  const { jobs, companies, skills } = await fetchOptions();
 
   return (
     <>
@@ -60,7 +63,7 @@ export default async function PublicAnalyzePage() {
           </div>
 
           <div className="animate-slide-up" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
-            <AnalyzeForm jobs={jobs} companies={companies} />
+            <AnalyzeForm jobs={jobs} companies={companies} skills={skills} />
           </div>
         </div>
       </main>
