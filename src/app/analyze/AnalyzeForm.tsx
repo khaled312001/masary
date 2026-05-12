@@ -29,9 +29,9 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
     currentCourses: ""
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const jobSuggestions = fuzzyOptions(jobs, form.jobTitle, "titleAr", 6);
+  const jobSuggestions = fuzzyOptions(jobs, form.jobTitle, "titleAr", 6, 0.72);
   const skillFragment = lastListFragment(form.currentSkills);
-  const skillSuggestions = fuzzyOptions(skills, skillFragment, "nameAr", 6);
+  const skillSuggestions = fuzzyOptions(skills, skillFragment, "nameAr", 6, 0.45);
 
   function update<K extends keyof FormState>(k: K, v: string) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -331,7 +331,7 @@ function Step({ text, delay }: { text: string; delay: number }) {
   );
 }
 
-function fuzzyOptions(options: Option[], query: string, key: "titleAr" | "nameAr", limit: number) {
+function fuzzyOptions(options: Option[], query: string, key: "titleAr" | "nameAr", limit: number, threshold = 0.45) {
   const q = normalizeArabic(query);
   if (q.length < 2) return [];
 
@@ -340,7 +340,7 @@ function fuzzyOptions(options: Option[], query: string, key: "titleAr" | "nameAr
       const label = item[key] ?? "";
       return { item, label, score: similarity(q, normalizeArabic(label)) };
     })
-    .filter((row) => row.label && normalizeArabic(row.label) !== q && row.score >= 0.45)
+    .filter((row) => row.label && normalizeArabic(row.label) !== q && row.score >= threshold)
     .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label, "ar"))
     .slice(0, limit)
     .map((row) => row.item);
