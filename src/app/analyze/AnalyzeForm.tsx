@@ -21,6 +21,7 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Errors>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     fullName: "",
     jobTitle: "",
@@ -29,7 +30,7 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
     currentCourses: ""
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
-  const jobSuggestions = fuzzyOptions(jobs, form.jobTitle, "titleAr", 6, 0.72);
+  const jobSuggestions = fuzzyOptions(jobs, form.jobTitle, "titleAr", 6, 0.82);
   const skillFragment = lastListFragment(form.currentSkills);
   const skillSuggestions = fuzzyOptions(skills, skillFragment, "nameAr", 6, 0.45);
 
@@ -126,6 +127,8 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
           placeholder="مثال: عبدالله العتيبي"
           value={form.fullName}
           onChange={(e) => update("fullName", e.target.value)}
+          onFocus={() => setFocusedField("fullName")}
+          onBlur={() => setFocusedField(null)}
           maxLength={100}
         />
       </Field>
@@ -144,14 +147,18 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
             placeholder="اكتب المسمى الوظيفي"
             value={form.jobTitle}
             onChange={(e) => update("jobTitle", e.target.value)}
+            onFocus={() => setFocusedField("jobTitle")}
+            onBlur={() => setFocusedField(null)}
             maxLength={120}
             autoComplete="off"
           />
-          <SuggestionList
-            options={jobSuggestions}
-            getLabel={(item) => item.titleAr ?? ""}
-            onPick={(value) => update("jobTitle", value)}
-          />
+          {focusedField === "jobTitle" && (
+            <SuggestionList
+              options={jobSuggestions}
+              getLabel={(item) => item.titleAr ?? ""}
+              onPick={(value) => update("jobTitle", value)}
+            />
+          )}
         </div>
       </Field>
 
@@ -167,6 +174,8 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
           placeholder="جهة العمل"
           value={form.employer}
           onChange={(e) => update("employer", e.target.value)}
+          onFocus={() => setFocusedField("employer")}
+          onBlur={() => setFocusedField(null)}
           maxLength={120}
         />
         <datalist id="companies-list">
@@ -189,13 +198,17 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
           placeholder="مثال: التواصل الفعّال، Microsoft Excel، تحليل البيانات، اللغة الإنجليزية..."
           value={form.currentSkills}
           onChange={(e) => update("currentSkills", e.target.value)}
+          onFocus={() => setFocusedField("currentSkills")}
+          onBlur={() => setFocusedField(null)}
           maxLength={2000}
         />
-        <SuggestionList
-          options={skillSuggestions}
-          getLabel={(item) => item.nameAr ?? ""}
-          onPick={applySkillSuggestion}
-        />
+        {focusedField === "currentSkills" && (
+          <SuggestionList
+            options={skillSuggestions}
+            getLabel={(item) => item.nameAr ?? ""}
+            onPick={applySkillSuggestion}
+          />
+        )}
         <div className="text-[11px] text-stone-400 mt-1">{form.currentSkills.length} / 2000</div>
       </Field>
 
@@ -367,9 +380,19 @@ function normalizeArabic(value: string) {
 function similarity(a: string, b: string) {
   if (!a || !b) return 0;
   if (a === b) return 1;
-  if (a.includes(b) || b.includes(a)) {
-    return Math.min(0.96, Math.min(a.length, b.length) / Math.max(a.length, b.length) + 0.28);
+
+  const x = a.length < b.length ? a : b;
+  const y = a.length < b.length ? b : a;
+
+  // Exact prefix match bonus
+  if (y.startsWith(x)) {
+    return Math.min(0.98, x.length / y.length + 0.35);
   }
+
+  if (y.includes(x)) {
+    return Math.min(0.96, x.length / y.length + 0.2);
+  }
+
   const distance = levenshtein(a, b);
   return Math.max(0, 1 - distance / Math.max(a.length, b.length));
 }
