@@ -39,14 +39,22 @@ export function ReportView({ report }: Props) {
   const [copied, setCopied] = useState(false);
   const isPaid = report.isPaid;
 
-  function shareLink() {
+  async function shareLink() {
     const url = window.location.href;
-    if (navigator.share) {
-      navigator.share({ title: "تقرير مساري", url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url);
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      try {
+        await navigator.share({ title: "تقرير مساري", url });
+        return;
+      } catch {
+        // user cancelled or share not allowed; fall back to clipboard
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("انسخ الرابط:", url);
     }
   }
 

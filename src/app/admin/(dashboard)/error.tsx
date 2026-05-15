@@ -33,8 +33,8 @@ export default function DashboardError({
           <button onClick={reset} className="btn-primary !py-2 !px-4 text-sm">
             <RefreshCw className="w-4 h-4" /> إعادة المحاولة
           </button>
-          <Link href="/api/healthz" target="_blank" className="btn-secondary !py-2 !px-4 text-sm">
-            تشخيص /healthz
+          <Link href="/api/debug" target="_blank" className="btn-secondary !py-2 !px-4 text-sm">
+            تشخيص الاتصال
           </Link>
           <Link href="/" className="btn-secondary !py-2 !px-4 text-sm">
             <Home className="w-4 h-4" /> الرئيسية

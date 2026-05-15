@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Shield
 } from "lucide-react";
+import { CopyButton } from "./CopyButton";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,15 @@ export default async function PayPage({ params }: { params: { id: string } }) {
     notFound();
   }
   if (!report) notFound();
+
+  const payment = {
+    bank: process.env.NEXT_PUBLIC_PAY_BANK || "مصرف الراجحي",
+    beneficiary: process.env.NEXT_PUBLIC_PAY_BENEFICIARY || "منصة مساري",
+    iban: process.env.NEXT_PUBLIC_PAY_IBAN || "SA00 0000 0000 0000 0000 0000",
+    amount: process.env.NEXT_PUBLIC_PAY_AMOUNT || "٥٠ ريال",
+    whatsapp: (process.env.NEXT_PUBLIC_PAY_WHATSAPP || "966500000000").replace(/\D/g, ""),
+    email: process.env.NEXT_PUBLIC_PAY_EMAIL || "admin@masary.sa"
+  };
 
   // Already paid? redirect via component
   if (report.isPaid) {
@@ -132,11 +142,11 @@ export default async function PayPage({ params }: { params: { id: string } }) {
                 <h3 className="font-bold text-stone-900">حوّل ٥٠ ريال إلى الحساب التالي</h3>
               </div>
               <div className="space-y-2 text-sm bg-white rounded-xl border border-stone-100 p-4">
-                <Row label="اسم البنك" value="مصرف الراجحي" />
-                <Row label="اسم المستفيد" value="منصة مساري" />
-                <Row label="IBAN" value="SA00 0000 0000 0000 0000 0000" mono />
-                <Row label="المبلغ" value="٥٠ ريال" highlight />
-                <Row label="رقم التقرير" value={report.id} mono small />
+                <Row label="اسم البنك" value={payment.bank} />
+                <Row label="اسم المستفيد" value={payment.beneficiary} />
+                <Row label="IBAN" value={payment.iban} mono copyable />
+                <Row label="المبلغ" value={payment.amount} highlight />
+                <Row label="رقم التقرير" value={report.id} mono small copyable />
               </div>
               <p className="text-[11px] text-stone-500 mt-3">
                 💡 اذكر <strong>رقم التقرير</strong> في خانة الملاحظات عند التحويل
@@ -154,7 +164,7 @@ export default async function PayPage({ params }: { params: { id: string } }) {
               </p>
               <div className="grid sm:grid-cols-2 gap-2">
                 <a
-                  href={`https://wa.me/966500000000?text=${encodeURIComponent(`السلام عليكم، أرفقت إيصال التحويل لتفعيل التقرير رقم: ${report.id}`)}`}
+                  href={`https://wa.me/${payment.whatsapp}?text=${encodeURIComponent(`السلام عليكم، أرفقت إيصال التحويل لتفعيل التقرير رقم: ${report.id}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-500 hover:bg-green-600 text-white px-4 py-3 text-sm font-bold transition active:scale-95"
@@ -163,7 +173,7 @@ export default async function PayPage({ params }: { params: { id: string } }) {
                   واتساب
                 </a>
                 <a
-                  href={`mailto:admin@masary.sa?subject=تفعيل التقرير ${report.id}&body=السلام عليكم،%0D%0Aأرفقت إيصال التحويل لتفعيل التقرير رقم: ${report.id}`}
+                  href={`mailto:${payment.email}?subject=${encodeURIComponent(`تفعيل التقرير ${report.id}`)}&body=${encodeURIComponent(`السلام عليكم،\nأرفقت إيصال التحويل لتفعيل التقرير رقم: ${report.id}`)}`}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-800 px-4 py-3 text-sm font-bold transition active:scale-95"
                 >
                   <Building2 className="w-4 h-4" />
@@ -212,22 +222,28 @@ function Row({
   value,
   mono,
   highlight,
-  small
+  small,
+  copyable
 }: {
   label: string;
   value: string;
   mono?: boolean;
   highlight?: boolean;
   small?: boolean;
+  copyable?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-stone-100 last:border-b-0 pb-1.5 last:pb-0">
       <span className="text-stone-500 text-xs">{label}</span>
-      <span
-        className={`${mono ? "font-mono" : "font-semibold"} ${highlight ? "text-brand-700 font-extrabold" : "text-stone-800"} ${small ? "text-[11px]" : "text-sm"}`}
-      >
-        {value}
-      </span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span
+          className={`${mono ? "font-mono" : "font-semibold"} ${highlight ? "text-brand-700 font-extrabold" : "text-stone-800"} ${small ? "text-[11px]" : "text-sm"} truncate`}
+          title={value}
+        >
+          {value}
+        </span>
+        {copyable && <CopyButton value={value} label={`نسخ ${label}`} />}
+      </div>
     </div>
   );
 }

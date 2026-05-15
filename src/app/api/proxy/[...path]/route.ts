@@ -1,40 +1,56 @@
 import { NextResponse } from "next/server";
-import { apiFetch, getServerToken } from "@/lib/api";
+import { API_URL, getServerToken } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Allow long-running AI analysis (Vercel default is 10s on Hobby; Pro allows up to 60s).
+export const maxDuration = 60;
 
 async function proxy(req: Request, params: { path: string[] }, method: string) {
   const path = "/" + params.path.join("/");
   const url = new URL(req.url);
-  const queryString = url.search;
+  const target = `${API_URL}${path}${url.search}`;
   const token = getServerToken();
-  const contentType = req.headers.get("content-type");
+  const contentType = req.headers.get("content-type") || "";
 
-  let body: any = undefined;
   const headers: Record<string, string> = {};
-  if (method !== "GET" && method !== "DELETE") {
-    if (contentType?.includes("multipart/form-data")) {
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let body: BodyInit | undefined;
+  if (method !== "GET" && method !== "HEAD" && method !== "DELETE") {
+    if (contentType.includes("multipart/form-data")) {
+      // Forward the raw body untouched so multer can parse it on the backend.
       body = Buffer.from(await req.arrayBuffer());
       headers["Content-Type"] = contentType;
-    } else {
+    } else if (contentType) {
       body = await req.text();
+      headers["Content-Type"] = contentType;
     }
   }
 
   try {
-    const data = await apiFetch(path + queryString, {
+    const res = await fetch(target, {
       method,
-      token,
       headers,
-      ...(body !== undefined ? { body } : {})
+      body,
+      cache: "no-store"
     });
-    return NextResponse.json(data);
+
+    const text = await res.text();
+    let data: unknown = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text.slice(0, 500) };
+      }
+    }
+
+    return NextResponse.json(data ?? {}, { status: res.status });
   } catch (e: any) {
-    const status = /HTTP (\d+)/.exec(e.message)?.[1];
     return NextResponse.json(
-      { error: e.message },
-      { status: status ? Number(status) : 500 }
+      { error: e?.message || "تعذر الاتصال بالخادم" },
+      { status: 502 }
     );
   }
 }
@@ -44,6 +60,9 @@ export async function GET(req: Request, { params }: { params: { path: string[] }
 }
 export async function POST(req: Request, { params }: { params: { path: string[] } }) {
   return proxy(req, params, "POST");
+}
+export async function PUT(req: Request, { params }: { params: { path: string[] } }) {
+  return proxy(req, params, "PUT");
 }
 export async function PATCH(req: Request, { params }: { params: { path: string[] } }) {
   return proxy(req, params, "PATCH");

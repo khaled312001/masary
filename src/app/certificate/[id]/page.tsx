@@ -59,6 +59,7 @@ export default async function CertificatePage({ params }: { params: { id: string
     day: "numeric"
   });
   const certNumber = `MSY-${report.id.slice(-8).toUpperCase()}`;
+  const verifyHost = (process.env.NEXT_PUBLIC_SITE_HOST || "masary-five.vercel.app").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   return (
     <main className="min-h-screen bg-mesh py-6 md:py-12 px-4 print:bg-white print:py-0 print:px-0">
@@ -152,7 +153,7 @@ export default async function CertificatePage({ params }: { params: { id: string
 
             <div className="mt-6 flex items-center gap-2 text-stone-400 text-xs">
               <span>للتحقق:</span>
-              <span className="font-mono">masary-five.vercel.app/certificate/{report.id.slice(-8)}</span>
+              <span className="font-mono">{verifyHost}/certificate/{report.id}</span>
             </div>
           </div>
         </div>
