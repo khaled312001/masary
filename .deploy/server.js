@@ -43,9 +43,18 @@ for (const p of [FRONTEND_ENTRY, BACKEND_ENTRY]) {
 const children = {};
 function spawnChild(name, entry, cwd, port, extraEnv = {}) {
   if (children[name]) return;
+  // Hostinger Passenger injects a preload hook via NODE_OPTIONS that overrides
+  // http.Server.listen() to bind to its Unix socket. Strip those vars so the
+  // child can bind to a real TCP port on 127.0.0.1.
+  const cleanedEnv = { ...process.env };
+  delete cleanedEnv.NODE_OPTIONS;
+  delete cleanedEnv.LSNODE_CONSOLE_LOG;
+  for (const k of Object.keys(cleanedEnv)) {
+    if (k.startsWith("PASSENGER_")) delete cleanedEnv[k];
+  }
   const child = spawn(NODE_BIN, [entry], {
     cwd,
-    env: { ...process.env, ...extraEnv, PORT: String(port), HOSTNAME: "127.0.0.1" },
+    env: { ...cleanedEnv, ...extraEnv, PORT: String(port), HOSTNAME: "127.0.0.1" },
     stdio: ["ignore", "inherit", "inherit"]
   });
   children[name] = child;
