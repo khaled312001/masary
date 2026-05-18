@@ -1,135 +1,136 @@
 // Unified entry point for the Hostinger Passenger Node.js app.
 //
-//   /home/.../domains/masaary.com/nodejs/
-//     ├── server.js                    (this file — Passenger entry)
-//     ├── package.json
-//     ├── node_modules/                (express, http-proxy, dotenv, prisma, etc.)
-//     ├── .env
-//     ├── prisma/                      (schema lives inside backend/)
-//     ├── backend/                     (Express + Prisma, compiled to dist/)
-//     │   ├── src/  prisma/  package.json  tsconfig.json  dist/
-//     │   └── node_modules/
-//     └── frontend/                    (Next.js standalone)
-//         ├── server.js                (Next.js own — spawned as child)
-//         ├── .next/  public/  package.json  node_modules/
+// Architecture (3 processes managed by this single Passenger entry):
+//   1) Parent (this file) — listens on Passenger PORT, proxies traffic.
+//   2) Backend child     — listens on BACKEND_PORT (default 4000).
+//   3) Frontend child    — listens on FRONTEND_PORT (default 3010).
 //
-// Behaviour:
-//   1) Load env from .env (using dotenv).
-//   2) Spawn frontend/server.js as child on FRONTEND_PORT (default 3010, internal).
-//   3) Start an Express server on PORT (Passenger-provided):
-//        - mount backend Express app at root → handles /api/{analyze,reports,...}
-//        - everything unmatched is proxied to the frontend child.
-//   4) Frontend child auto-restart if it dies.
+// Routing (parent):
+//   /api/{auth,analyze,reports,skills,jobs,courses,companies,platforms,stats,
+//          settings,contact,healthz}  →  backend child (4000)
+//   everything else (incl. /api/admin/*, /api/proxy/*, /api/debug, pages)
+//                                       →  frontend child (3010)
+//
+// Why 3 processes (vs. embedding backend as middleware)?
+//   Passenger wraps the parent's listen() with its own socket layer, so a Node
+//   process inside this container cannot reliably reach the parent's bound port
+//   via loopback. Running each app on its own real TCP port avoids that.
 
 "use strict";
 
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
-
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const FRONTEND_DIR = path.join(__dirname, "frontend");
 const FRONTEND_ENTRY = path.join(FRONTEND_DIR, "server.js");
-const BACKEND_APP_FILE = path.join(__dirname, "backend", "dist", "app.js");
+const BACKEND_DIR = path.join(__dirname, "backend");
+const BACKEND_ENTRY = path.join(BACKEND_DIR, "dist", "index.js");
 const NODE_BIN = process.execPath;
 
 const FRONTEND_PORT = parseInt(process.env.FRONTEND_PORT || "3010", 10);
+const BACKEND_PORT = parseInt(process.env.BACKEND_PORT || "4000", 10);
+const PASSENGER_PORT = parseInt(process.env.PORT || "3000", 10);
 
-if (!fs.existsSync(FRONTEND_ENTRY)) {
-  console.error("FATAL: missing", FRONTEND_ENTRY);
-  process.exit(1);
+for (const p of [FRONTEND_ENTRY, BACKEND_ENTRY]) {
+  if (!fs.existsSync(p)) {
+    console.error("FATAL: missing", p);
+    process.exit(1);
+  }
 }
-if (!fs.existsSync(BACKEND_APP_FILE)) {
-  console.error("FATAL: missing", BACKEND_APP_FILE);
-  process.exit(1);
-}
 
-let frontendChild = null;
-let restartTimer = null;
-
-function startFrontend() {
-  frontendChild = spawn(NODE_BIN, [FRONTEND_ENTRY], {
-    cwd: FRONTEND_DIR,
-    env: {
-      ...process.env,
-      PORT: String(FRONTEND_PORT),
-      HOSTNAME: "127.0.0.1",
-      // Frontend's own API_URL points to THIS process so its server-side
-      // fetches loop back through the same Express on the public port.
-      // We rely on /api/proxy/[...] which uses this.
-      API_URL: `http://127.0.0.1:${process.env.PORT || "3000"}`
-    },
+const children = {};
+function spawnChild(name, entry, cwd, port, extraEnv = {}) {
+  if (children[name]) return;
+  const child = spawn(NODE_BIN, [entry], {
+    cwd,
+    env: { ...process.env, ...extraEnv, PORT: String(port), HOSTNAME: "127.0.0.1" },
     stdio: ["ignore", "inherit", "inherit"]
   });
-  frontendChild.on("exit", (code, signal) => {
-    console.error(`[frontend] exited code=${code} signal=${signal} — restarting in 2s`);
-    frontendChild = null;
-    if (restartTimer) clearTimeout(restartTimer);
-    restartTimer = setTimeout(startFrontend, 2000);
+  children[name] = child;
+  child.on("exit", (code, signal) => {
+    console.error(`[${name}] exited code=${code} signal=${signal} — restarting in 2s`);
+    delete children[name];
+    setTimeout(() => spawnChild(name, entry, cwd, port, extraEnv), 2000);
   });
-  frontendChild.on("error", (err) => {
-    console.error("[frontend] spawn error:", err.message);
-  });
+  child.on("error", (err) => console.error(`[${name}] spawn error:`, err.message));
 }
 
 function shutdown(signal) {
   return () => {
-    console.log(`[parent] caught ${signal} — shutting down`);
-    if (frontendChild) {
-      try { frontendChild.kill(); } catch {}
+    console.log(`[parent] caught ${signal}`);
+    for (const child of Object.values(children)) {
+      try { child.kill(); } catch {}
     }
-    process.exit(0);
+    setTimeout(() => process.exit(0), 500);
   };
 }
 process.on("SIGTERM", shutdown("SIGTERM"));
 process.on("SIGINT", shutdown("SIGINT"));
 
-// --- main ---
-startFrontend();
+// --- spawn children ---
+spawnChild("backend", BACKEND_ENTRY, BACKEND_DIR, BACKEND_PORT);
+spawnChild("frontend", FRONTEND_ENTRY, FRONTEND_DIR, FRONTEND_PORT, {
+  // Frontend SSR + /api/proxy routes use this to reach the backend internally.
+  API_URL: `http://127.0.0.1:${BACKEND_PORT}`,
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "https://masaary.com"
+});
 
+// --- parent ---
 const express = require("express");
 const httpProxy = require("http-proxy");
 
-const { createApp: createBackendApp } = require(BACKEND_APP_FILE);
-const backendApp = createBackendApp();
-
-const proxy = httpProxy.createProxyServer({
+const backendProxy = httpProxy.createProxyServer({
+  target: `http://127.0.0.1:${BACKEND_PORT}`,
+  proxyTimeout: 120000,
+  timeout: 120000
+});
+const frontendProxy = httpProxy.createProxyServer({
   target: `http://127.0.0.1:${FRONTEND_PORT}`,
-  changeOrigin: false,
   ws: true,
   proxyTimeout: 120000,
   timeout: 120000
 });
-proxy.on("error", (err, req, res) => {
-  console.error("[proxy] error:", err.message, "for", req?.url);
-  if (res && !res.headersSent) {
-    res.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("الواجهة الأمامية مؤقتاً غير متاحة. حاول مرة أخرى.");
-  }
-});
+
+function proxyErrorHandler(name) {
+  return (err, req, res) => {
+    console.error(`[${name} proxy] error:`, err.message, "for", req?.url);
+    if (res && !res.headersSent) {
+      res.writeHead(502, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(`الخدمة (${name}) مؤقتاً غير متاحة. حاول مرة أخرى.`);
+    }
+  };
+}
+backendProxy.on("error", proxyErrorHandler("backend"));
+frontendProxy.on("error", proxyErrorHandler("frontend"));
+
+// Paths handled by the Next.js frontend (everything else under /api/* is backend).
+const NEXTJS_API_PREFIXES = [
+  "/api/admin/",
+  "/api/proxy/",
+  "/api/debug",
+  "/api/debug-auth"
+];
+
+function isNextjsApi(url) {
+  const p = url.split("?")[0];
+  return NEXTJS_API_PREFIXES.some((prefix) => p === prefix.replace(/\/$/, "") || p.startsWith(prefix));
+}
 
 const app = express();
 app.disable("x-powered-by");
 
-// Backend Express handles /api/{auth,analyze,reports,skills,jobs,courses,
-// companies,platforms,stats,settings,contact,healthz}.
-// It no longer has its own 404 catch-all (see backend/src/app.ts), so unmatched
-// /api/* requests fall through to Next.js too (handles /api/admin/login,
-// /api/proxy/[...], /api/debug etc.).
-app.use(backendApp);
-
-// Everything else → frontend child via HTTP proxy.
-app.all("*", (req, res) => {
-  proxy.web(req, res);
+app.use((req, res) => {
+  const url = req.url;
+  if (url.startsWith("/api/") && !isNextjsApi(url)) {
+    backendProxy.web(req, res);
+  } else {
+    frontendProxy.web(req, res);
+  }
 });
 
-const port = parseInt(process.env.PORT || "3000", 10);
-const httpServer = app.listen(port, () => {
-  console.log(`masaary unified server: parent listening on :${port}, frontend on :${FRONTEND_PORT}`);
+const httpServer = app.listen(PASSENGER_PORT, () => {
+  console.log(`masaary unified: parent :${PASSENGER_PORT}, backend :${BACKEND_PORT}, frontend :${FRONTEND_PORT}`);
 });
-
-// WebSocket upgrade passthrough for HMR (only relevant if dev mode is ever used).
-httpServer.on("upgrade", (req, socket, head) => {
-  proxy.ws(req, socket, head);
-});
+httpServer.on("upgrade", (req, socket, head) => frontendProxy.ws(req, socket, head));
