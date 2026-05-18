@@ -118,7 +118,7 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
       if (form.currentCourses.trim()) body.set("currentCourses", form.currentCourses.trim());
       if (cvFile) body.set("cv", cvFile);
 
-      const res = await fetch("/api/proxy/api/analyze", { method: "POST", body, signal: controller.signal });
+      const res = await fetch("/api/analyze", { method: "POST", body, signal: controller.signal });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "حدث خطأ غير متوقع");
       if (!data?.id) throw new Error("لم يتم إنشاء التقرير. حاول مرة أخرى.");

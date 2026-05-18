@@ -26,7 +26,7 @@ export function PaidToggle({ id, isPaid: initial }: { id: string; isPaid: boolea
     setBusy(true);
     try {
       const path = next ? "mark-paid" : "mark-unpaid";
-      const res = await fetch(`/api/proxy/api/reports/${id}/${path}`, {
+      const res = await fetch(`/api/reports/${id}/${path}`, {
         method: "POST"
       });
       if (!res.ok) {

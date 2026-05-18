@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { adminLogin } from "@/lib/admin-auth";
-import { TOKEN_COOKIE } from "@/lib/auth-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,16 +10,5 @@ export async function POST(req: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
-
-  cookies().set(TOKEN_COOKIE, result.token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7
-  });
-  // Clean up legacy cookie from older deployments
-  cookies().delete("masary_admin");
-
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ token: result.token, admin: { email: result.email, role: "admin" } });
 }

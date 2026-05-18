@@ -35,7 +35,7 @@ export function SettingsForm({
     setSaving(true);
     setMsg(null);
     try {
-      const res = await fetch(`/api/proxy/api/settings/${settingKey}`, {
+      const res = await fetch(`/api/settings/${settingKey}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: value.trim() })
@@ -57,7 +57,7 @@ export function SettingsForm({
     setRemoving(true);
     setMsg(null);
     try {
-      const res = await fetch(`/api/proxy/api/settings/${settingKey}`, { method: "DELETE" });
+      const res = await fetch(`/api/settings/${settingKey}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "تعذر الحذف");

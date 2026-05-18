@@ -174,7 +174,7 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
       if (form.currentCourses.trim()) body.set("currentCourses", form.currentCourses.trim());
       if (cvFile) body.set("cv", cvFile);
 
-      const res = await fetch("/api/proxy/api/analyze", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         body,
         signal: controller.signal

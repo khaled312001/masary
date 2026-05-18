@@ -86,7 +86,7 @@ export function JobsAdmin({ rows, skills }: { rows: Row[]; skills: Skill[] }) {
         skills: draft.skills
       };
       const res = await fetch(
-        editing ? `/api/proxy/api/jobs/${editing.id}` : "/api/proxy/api/jobs",
+        editing ? `/api/jobs/${editing.id}` : "/api/jobs",
         {
           method: editing ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
@@ -108,7 +108,7 @@ export function JobsAdmin({ rows, skills }: { rows: Row[]; skills: Skill[] }) {
     if (!confirm("حذف هذه الوظيفة؟")) return;
     setWorking(true);
     try {
-      const res = await fetch(`/api/proxy/api/jobs/${r.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/jobs/${r.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "تعذر الحذف");

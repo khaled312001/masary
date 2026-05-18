@@ -11,7 +11,7 @@ export default async function CompaniesPage() {
   return (
     <CrudTable
       title="الشركات وجهات العمل"
-      endpoint="/api/proxy/api/companies"
+      endpoint="/api/companies"
       rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم" },

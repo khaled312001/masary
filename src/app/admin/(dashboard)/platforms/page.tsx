@@ -11,7 +11,7 @@ export default async function PlatformsPage() {
   return (
     <CrudTable
       title="منصات التعلم"
-      endpoint="/api/proxy/api/platforms"
+      endpoint="/api/platforms"
       rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم" },

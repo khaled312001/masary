@@ -11,7 +11,7 @@ export default async function SkillsPage() {
   return (
     <CrudTable
       title="المهارات"
-      endpoint="/api/proxy/api/skills"
+      endpoint="/api/skills"
       rows={rows}
       columns={[
         { key: "nameAr", label: "الاسم بالعربية" },
