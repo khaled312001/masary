@@ -67,11 +67,11 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="mailto:admin@masary.sa"
+                  href="mailto:info@masaary.com"
                   className="inline-flex items-center gap-2 text-stone-600 hover:text-brand-700 transition"
                 >
                   <Mail className="w-4 h-4" />
-                  admin@masary.sa
+                  info@masaary.com
                 </a>
               </li>
             </ul>

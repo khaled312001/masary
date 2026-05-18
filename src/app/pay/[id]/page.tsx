@@ -15,6 +15,7 @@ import {
   Shield
 } from "lucide-react";
 import { CopyButton } from "./CopyButton";
+import { ReceiptForm } from "./ReceiptForm";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ type ReportRow = {
   id: string;
   fullName: string;
   jobTitle: string;
+  email: string | null;
   isPaid: boolean;
 };
 
@@ -40,7 +42,7 @@ export default async function PayPage({ params }: { params: { id: string } }) {
     iban: process.env.NEXT_PUBLIC_PAY_IBAN || "SA00 0000 0000 0000 0000 0000",
     amount: process.env.NEXT_PUBLIC_PAY_AMOUNT || "٥٠ ريال",
     whatsapp: (process.env.NEXT_PUBLIC_PAY_WHATSAPP || "966500000000").replace(/\D/g, ""),
-    email: process.env.NEXT_PUBLIC_PAY_EMAIL || "admin@masary.sa"
+    email: process.env.NEXT_PUBLIC_PAY_EMAIL || "info@masaary.com"
   };
 
   // Already paid? redirect via component
@@ -182,14 +184,23 @@ export default async function PayPage({ params }: { params: { id: string } }) {
               </div>
             </div>
 
-            {/* Step 3: activation */}
+            {/* Step 3: send receipt by email form */}
+            <div className="rounded-2xl border border-stone-100 bg-stone-50/40 p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-600 to-brand-800 text-white flex items-center justify-center text-sm font-bold">3</span>
+                <h3 className="font-bold text-stone-900">أو أرسل الإيصال مباشرة من هنا</h3>
+              </div>
+              <ReceiptForm reportId={report.id} defaultName={report.fullName} defaultEmail={report.email} />
+            </div>
+
+            {/* Step 4: activation */}
             <div className="rounded-2xl border border-brand-200 bg-brand-50/50 p-5">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-600 to-brand-800 text-white flex items-center justify-center text-sm font-bold">3</span>
+                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-brand-600 to-brand-800 text-white flex items-center justify-center text-sm font-bold">4</span>
                 <h3 className="font-bold text-stone-900">سيتم تفعيل تقريرك</h3>
               </div>
               <p className="text-sm text-stone-600 mr-9">
-                خلال 30 دقيقة من استلام الإيصال (أيام العمل) — وستحصل على رسالة تأكيد.
+                خلال 30 دقيقة من استلام الإيصال (أيام العمل) — وستحصل على رسالة تأكيد على بريدك.
               </p>
             </div>
 

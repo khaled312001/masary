@@ -14,13 +14,17 @@ import {
   FileText,
   Upload,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Mail,
+  Phone
 } from "lucide-react";
 
 type Option = { id: string; titleAr?: string; nameAr?: string };
 
 type FormState = {
   fullName: string;
+  email: string;
+  phone: string;
   jobTitle: string;
   employer: string;
   currentSkills: string;
@@ -47,6 +51,8 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({
     fullName: "",
+    email: "",
+    phone: "",
     jobTitle: "",
     employer: "",
     currentSkills: "",
@@ -76,6 +82,13 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
     if (!name) e.fullName = "أدخل اسمك الكامل";
     else if (name.length < 2) e.fullName = "الاسم قصير جداً";
     else if (name.length > 100) e.fullName = "الاسم طويل جداً";
+
+    const email = form.email.trim();
+    if (!email) e.email = "أدخل بريدك الإلكتروني لاستلام التقرير";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "صيغة البريد غير صحيحة";
+
+    const phone = form.phone.trim();
+    if (phone && !/^[+\d][\d\s\-()]{6,30}$/.test(phone)) e.phone = "رقم الجوال غير صحيح";
 
     const job = form.jobTitle.trim();
     if (!job) e.jobTitle = "أدخل المسمى الوظيفي المستهدف";
@@ -153,6 +166,8 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
     try {
       const body = new FormData();
       body.set("fullName", form.fullName.trim());
+      body.set("email", form.email.trim());
+      if (form.phone.trim()) body.set("phone", form.phone.trim());
       body.set("jobTitle", form.jobTitle.trim());
       if (form.employer.trim()) body.set("employer", form.employer.trim());
       if (form.currentSkills.trim()) body.set("currentSkills", form.currentSkills.trim());
@@ -229,6 +244,47 @@ export function AnalyzeForm({ jobs, companies, skills }: { jobs: Option[]; compa
           autoComplete="name"
         />
       </Field>
+
+      <div className="grid sm:grid-cols-2 gap-5">
+        <Field
+          name="email"
+          icon={Mail}
+          label="البريد الإلكتروني"
+          required
+          hint="سنرسل لك رابط التقرير على هذا البريد"
+          error={errors.email}
+        >
+          <input
+            type="email"
+            className={`input ${errors.email ? "!border-red-300 focus:!border-red-500 focus:!ring-red-100" : ""}`}
+            placeholder="name@example.com"
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
+            maxLength={180}
+            autoComplete="email"
+            dir="ltr"
+          />
+        </Field>
+
+        <Field
+          name="phone"
+          icon={Phone}
+          label="رقم الجوال (اختياري)"
+          hint="للتواصل عند الحاجة لتفعيل النسخة الكاملة"
+          error={errors.phone}
+        >
+          <input
+            type="tel"
+            className={`input ${errors.phone ? "!border-red-300 focus:!border-red-500 focus:!ring-red-100" : ""}`}
+            placeholder="05x xxx xxxx"
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
+            maxLength={30}
+            autoComplete="tel"
+            dir="ltr"
+          />
+        </Field>
+      </div>
 
       <Field
         name="jobTitle"

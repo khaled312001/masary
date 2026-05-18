@@ -37,7 +37,7 @@ npm run dev   # على http://localhost:3000
 1. ادفع الريبو على GitHub.
 2. أنشئ Project في Vercel من الريبو.
 3. أضف Environment Variables:
-   - `API_URL` = `https://api.masary.sa` (رابط الباك إند المنشور)
+   - `API_URL` = `https://api.masaary.com` (رابط الباك إند المنشور)
    - `NEXT_PUBLIC_API_URL` = نفس الرابط
    - `AUTH_SECRET` = نفس قيمة الباك إند
 4. Deploy.
