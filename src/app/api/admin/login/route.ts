@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  const result = await adminLogin(body);
+  const clientKey =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const result = await adminLogin(body, clientKey);
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }

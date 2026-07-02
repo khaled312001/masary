@@ -59,7 +59,7 @@ export default async function CertificatePage({ params }: { params: { id: string
     day: "numeric"
   });
   const certNumber = `MSY-${report.id.slice(-8).toUpperCase()}`;
-  const verifyHost = (process.env.NEXT_PUBLIC_SITE_HOST || "masary-five.vercel.app").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const verifyHost = (process.env.NEXT_PUBLIC_SITE_HOST || "masaary.com").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   return (
     <main className="min-h-screen bg-mesh py-6 md:py-12 px-4 print:bg-white print:py-0 print:px-0">

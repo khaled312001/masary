@@ -44,10 +44,9 @@ export default async function AdminHome() {
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <div className="font-bold">تعذر الاتصال بالـ API</div>
+              <div className="font-bold">تعذر جلب البيانات</div>
               <p className="text-sm mt-1 opacity-90">
-                تحقق من <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">API_URL</code> /
-                <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs"> NEXT_PUBLIC_API_URL</code> في إعدادات Vercel.
+                تحقق من اتصال قاعدة البيانات (<code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">DATABASE_URL</code>) وإعدادات الخادم.
               </p>
               <p className="text-xs mt-2 opacity-70 break-all">
                 <strong>التفاصيل:</strong> {error}

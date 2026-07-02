@@ -82,8 +82,9 @@ export function ReportView({ report }: Props) {
                   </>
                 )}
               </p>
-              <p className="text-white/60 text-xs mt-1">
-                تاريخ الإصدار: {new Date(report.createdAt).toLocaleDateString("ar-SA")}
+              <p className="text-white/60 text-xs mt-1" suppressHydrationWarning>
+                تاريخ الإصدار:{" "}
+                {new Date(report.createdAt).toLocaleDateString("ar-SA", { timeZone: "Asia/Riyadh" })}
               </p>
             </div>
             <ScoreCircle score={data.matchScore} />
@@ -138,21 +139,21 @@ export function ReportView({ report }: Props) {
           title="مهاراتك الحالية"
           icon={CheckCircle2}
           tone="green"
-          items={data.presentSkills.map((s) => ({ name: s.name, note: s.note }))}
+          items={(data.presentSkills ?? []).map((s) => ({ name: s.name, note: s.note }))}
           empty="لم يتم رصد مهارات مطابقة بشكل كامل"
         />
         <SkillsCard
           title="مهارات تحتاج تطوير"
           icon={AlertCircle}
           tone="amber"
-          items={data.partialSkills.map((s) => ({ name: s.name, note: s.note }))}
+          items={(data.partialSkills ?? []).map((s) => ({ name: s.name, note: s.note }))}
           empty="لا توجد مهارات جزئية"
         />
         <SkillsCard
           title="فجوات مهاراتك"
           icon={XCircle}
           tone="red"
-          items={data.missingSkills.map((s) => ({ name: s.name, note: s.note, importance: s.importance }))}
+          items={(data.missingSkills ?? []).map((s) => ({ name: s.name, note: s.note, importance: s.importance }))}
           empty="ممتاز! لا توجد فجوات كبيرة"
         />
       </section>

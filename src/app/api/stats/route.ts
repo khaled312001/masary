@@ -20,6 +20,7 @@ export async function GET() {
     ]);
     return NextResponse.json({ jobs, skills, courses, platforms, companies, reports });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "تعذر جلب الإحصائيات" }, { status: 500 });
+    console.error("[api/stats] GET failed:", e);
+    return NextResponse.json({ error: "تعذر جلب الإحصائيات" }, { status: 500 });
   }
 }

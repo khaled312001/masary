@@ -12,7 +12,7 @@ export async function getAdminSession() {
 
 export async function requireAdmin(): Promise<NextResponse | null> {
   const session = await getAdminSession();
-  if (!session) {
+  if (!session || session.role !== "admin") {
     return NextResponse.json({ error: "غير مصرّح" }, { status: 401 });
   }
   return null;

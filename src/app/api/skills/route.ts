@@ -15,7 +15,8 @@ const Schema = z.object({
 
 export async function GET() {
   try {
-    const rows = await prisma.skill.findMany({ orderBy: { nameAr: "asc" } });
+    // Newest first — user-submitted skills surface at the top as fresh references.
+    const rows = await prisma.skill.findMany({ orderBy: { createdAt: "desc" } });
     return NextResponse.json(rows);
   } catch (e: any) {
     return NextResponse.json({ error: e?.message ?? "تعذر جلب المهارات" }, { status: 500 });

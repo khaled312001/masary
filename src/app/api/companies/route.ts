@@ -26,7 +26,8 @@ export async function GET() {
     const rows = await prisma.company.findMany({ orderBy: { nameAr: "asc" } });
     return NextResponse.json(rows);
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "تعذر جلب البيانات" }, { status: 500 });
+    console.error("[api/companies] GET failed:", e);
+    return NextResponse.json({ error: "تعذر جلب البيانات" }, { status: 500 });
   }
 }
 

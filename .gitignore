@@ -13,6 +13,16 @@ dist
 .DS_Store
 .vercel
 
+# Server-only credentials reference data (never commit)
+secret-data.json
+
+# DB dump contains a real API key + user PII — keep out of the repo
+u790947786_ai.sql
+*.sql
+
+# Deployment tooling / prebuilt bundles (server addresses + 30MB artifacts)
+.deploy/
+
 # Prisma
 /prisma/migrations/dev.db*
 /prisma/dev.db*

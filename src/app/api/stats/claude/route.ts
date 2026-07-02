@@ -53,6 +53,7 @@ export async function GET() {
       reports
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "تعذر جلب تقارير Claude" }, { status: 500 });
+    console.error("[api/stats/claude] GET failed:", e);
+    return NextResponse.json({ error: "تعذر جلب تقارير Claude" }, { status: 500 });
   }
 }

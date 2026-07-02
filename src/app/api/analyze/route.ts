@@ -5,10 +5,15 @@ import { analyzeWithClaude, type AnalysisInput } from "@/lib/ai";
 import { ACCEPTED_CV_MIME, MAX_CV_BYTES, extractCvText } from "@/lib/cvExtract";
 import { closest, normalizeText, splitList } from "@/lib/textMatching";
 import { sendMail, htmlShell, btn, infoTable } from "@/lib/mailer";
+import { rateLimit, clientIp } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+// Public + expensive (paid Claude call). Cap per-IP to blunt cost/DoS abuse.
+const ANALYZE_LIMIT = 6;
+const ANALYZE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 const Schema = z.object({
   fullName: z.string().min(2).max(100),
@@ -20,7 +25,22 @@ const Schema = z.object({
   currentCourses: z.string().max(2000).optional()
 });
 
+// Report.data markers while generation is in progress. Full-report generation
+// takes ~60–90s (Claude produces a large JSON), which exceeds the hosting
+// edge's 60s request timeout — so we create the report, return its id
+// immediately, and finish generation in the background.
+type PendingData = { status: "pending"; startedAt: string };
+type ErrorData = { status: "error"; message: string };
+
 export async function POST(req: Request) {
+  const rl = rateLimit(`analyze:${clientIp(req)}`, ANALYZE_LIMIT, ANALYZE_WINDOW_MS);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "لقد أنشأت تقارير كثيرة خلال فترة قصيرة. انتظر قليلاً ثم حاول مرة أخرى." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   let form: FormData;
   try {
     form = await req.formData();
@@ -57,26 +77,102 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "الرجاء التحقق من الحقول المطلوبة" }, { status: 400 });
   }
 
+  const data = {
+    ...parsed.data,
+    email: (parsed.data.email || "").trim() || null,
+    phone: (parsed.data.phone || "").trim() || null,
+    currentSkills: (parsed.data.currentSkills || "").trim(),
+    currentCourses: (parsed.data.currentCourses || "").trim()
+  };
+
+  if (!data.currentSkills && !cvFile) {
+    return NextResponse.json(
+      { error: "أدخل المهارات الحالية أو ارفع سيرة ذاتية لاستخراجها." },
+      { status: 400 }
+    );
+  }
+
+  // Extract CV text/bytes now (needs the uploaded File, which is gone after we return).
+  let cvText: string | null = null;
+  let cvBase64: string | null = null;
+  let cvMediaType: string | null = null;
   try {
-    const cvText = await extractCvText(cvFile);
-    const data = {
-      ...parsed.data,
-      email: (parsed.data.email || "").trim() || null,
-      phone: (parsed.data.phone || "").trim() || null,
-      currentSkills: (parsed.data.currentSkills || "").trim(),
-      currentCourses: (parsed.data.currentCourses || "").trim()
-    };
-
-    if (!data.currentSkills && !cvFile) {
-      return NextResponse.json(
-        { error: "أدخل المهارات الحالية أو ارفع سيرة ذاتية لاستخراجها." },
-        { status: 400 }
-      );
+    cvText = await extractCvText(cvFile);
+    if (cvFile && (cvFile.type === "application/pdf" || cvFile.type.startsWith("image/"))) {
+      cvBase64 = Buffer.from(await cvFile.arrayBuffer()).toString("base64");
+      cvMediaType = cvFile.type;
     }
+  } catch (err) {
+    console.error("[analyze] CV extraction failed:", err);
+  }
 
-    const currentSkillNames = splitList(data.currentSkills);
+  // Create the report in a "pending" state and return its id right away.
+  let reportId: string;
+  try {
+    const pending: PendingData = { status: "pending", startedAt: new Date().toISOString() };
+    const saved = await prisma.report.create({
+      data: {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        jobTitle: data.jobTitle,
+        employer: data.employer || null,
+        currentSkills: data.currentSkills,
+        currentCourses: data.currentCourses || null,
+        cvText: cvText || null,
+        data: pending as any
+      } as any,
+      select: { id: true }
+    });
+    reportId = saved.id;
+  } catch (err) {
+    console.error("[analyze] failed to create pending report:", err);
+    return NextResponse.json(
+      { error: "تعذر إنشاء التقرير، حاول مرة أخرى." },
+      { status: 500 }
+    );
+  }
+
+  // Fire-and-forget: finish the heavy work after responding. The standalone
+  // Node server keeps running, so this completes even though the client has
+  // already been handed the report id.
+  void processReport(reportId, {
+    fullName: data.fullName,
+    email: data.email,
+    phone: data.phone,
+    jobTitle: data.jobTitle,
+    employer: data.employer || null,
+    currentSkills: data.currentSkills,
+    currentCourses: data.currentCourses,
+    cvText,
+    cvBase64,
+    cvMediaType
+  }).catch(async (err) => {
+    console.error("[analyze] background processing crashed:", err);
+    await markReportError(reportId, err?.message || "فشل التحليل").catch(() => {});
+  });
+
+  return NextResponse.json({ id: reportId });
+}
+
+type ProcessInput = {
+  fullName: string;
+  email: string | null;
+  phone: string | null;
+  jobTitle: string;
+  employer: string | null;
+  currentSkills: string;
+  currentCourses: string;
+  cvText: string | null;
+  cvBase64: string | null;
+  cvMediaType: string | null;
+};
+
+async function processReport(reportId: string, input: ProcessInput) {
+  try {
+    const currentSkillNames = splitList(input.currentSkills);
     const skills = await upsertUserSkills(currentSkillNames);
-    const matchedJob = await findOrCreateMatchingJob(data.jobTitle, skills.map((s) => s.id));
+    const matchedJob = await findOrCreateMatchingJob(input.jobTitle, skills.map((s) => s.id));
     const normalizedJobTitle = matchedJob.titleAr;
     const normalizedSkillNames = skills.map((s) => s.nameAr);
 
@@ -106,19 +202,17 @@ export async function POST(req: Request) {
       .findMany({ take: 30, select: { nameAr: true, industry: true } })
       .catch(() => []);
 
-    const cvBase64 =
-      cvFile && (cvFile.type === "application/pdf" || cvFile.type.startsWith("image/"))
-        ? Buffer.from(await cvFile.arrayBuffer()).toString("base64")
-        : null;
-
     const aiInput: AnalysisInput = {
-      fullName: data.fullName,
-      jobTitle: data.jobTitle,
-      employer: data.employer,
-      currentSkills: data.currentSkills,
-      currentCourses: data.currentCourses,
-      cvText,
-      cvFile: cvBase64 ? { mediaType: cvFile!.type, dataBase64: cvBase64 } : undefined,
+      fullName: input.fullName,
+      jobTitle: input.jobTitle,
+      employer: input.employer || undefined,
+      currentSkills: input.currentSkills,
+      currentCourses: input.currentCourses,
+      cvText: input.cvText || undefined,
+      cvFile:
+        input.cvBase64 && input.cvMediaType
+          ? { mediaType: input.cvMediaType, dataBase64: input.cvBase64 }
+          : undefined,
       normalizedJobTitle,
       normalizedSkills: normalizedSkillNames,
       matchedJob: matchedJob
@@ -138,44 +232,39 @@ export async function POST(req: Request) {
     const { report, usage } = await analyzeWithClaude(aiInput);
     await persistReportSkills(report, matchedJob.id, matchedJob.category === "مضافة من المستخدم");
 
-    const saved = await prisma.report.create({
+    await prisma.report.update({
+      where: { id: reportId },
       data: {
-        fullName: data.fullName,
-        email: data.email,
-        phone: data.phone,
         jobTitle: normalizedJobTitle,
-        employer: data.employer || null,
-        currentSkills: data.currentSkills,
-        currentCourses: data.currentCourses || null,
-        cvText: cvText || null,
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
         totalTokens: usage.totalTokens,
         claudeModel: usage.model,
-        matchedJobId: matchedJob?.id ?? null,
+        matchedJobId: matchedJob.id,
         data: report as any
-      } as any,
-      select: { id: true }
+      } as any
     });
 
     void sendNewReportEmails({
-      reportId: saved.id,
-      fullName: data.fullName,
+      reportId,
+      fullName: input.fullName,
       jobTitle: normalizedJobTitle,
-      employer: data.employer || null,
-      userEmail: data.email,
-      phone: data.phone,
+      employer: input.employer,
+      userEmail: input.email,
+      phone: input.phone,
       matchScore: report.matchScore
-    });
-
-    return NextResponse.json({ id: saved.id });
+    }).catch((e) => console.error("[analyze] email send failed:", e));
   } catch (err: any) {
-    console.error("[analyze] failed:", err);
-    return NextResponse.json(
-      { error: err?.message || "تعذر إنشاء التقرير، حاول مرة أخرى." },
-      { status: 500 }
-    );
+    console.error("[analyze] generation failed:", err);
+    await markReportError(reportId, err?.message || "تعذر إنشاء التقرير، حاول مرة أخرى.");
   }
+}
+
+async function markReportError(reportId: string, message: string) {
+  const errData: ErrorData = { status: "error", message };
+  await prisma.report
+    .update({ where: { id: reportId }, data: { data: errData as any } as any })
+    .catch((e) => console.error("[analyze] failed to mark report error:", e));
 }
 
 async function upsertUserSkills(names: string[]) {

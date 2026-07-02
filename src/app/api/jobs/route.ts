@@ -20,8 +20,9 @@ const Schema = z.object({
 
 export async function GET() {
   try {
+    // Newest first — user-submitted job titles surface at the top as fresh references.
     const rows = await prisma.job.findMany({
-      orderBy: { titleAr: "asc" },
+      orderBy: { createdAt: "desc" },
       include: { skills: { include: { skill: { select: { id: true, nameAr: true } } } } }
     });
     return NextResponse.json(
@@ -40,7 +41,8 @@ export async function GET() {
       }))
     );
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "تعذر جلب البيانات" }, { status: 500 });
+    console.error("[api/jobs] GET failed:", e);
+    return NextResponse.json({ error: "تعذر جلب البيانات" }, { status: 500 });
   }
 }
 

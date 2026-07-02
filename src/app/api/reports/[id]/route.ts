@@ -5,9 +5,24 @@ import { requireAdmin } from "@/lib/auth-server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Public: anyone with the link can view a report.
+// Public: anyone with the link can view a report. Only expose the fields the
+// public report / pay / certificate pages need — never the CV text, phone,
+// or token/cost accounting fields (those stay admin-only).
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const report = await prisma.report.findUnique({ where: { id: params.id } });
+  const report = await prisma.report.findUnique({
+    where: { id: params.id },
+    select: {
+      id: true,
+      fullName: true,
+      jobTitle: true,
+      employer: true,
+      email: true,
+      isPaid: true,
+      paidAt: true,
+      createdAt: true,
+      data: true
+    }
+  });
   if (!report) {
     return NextResponse.json({ error: "التقرير غير موجود" }, { status: 404 });
   }

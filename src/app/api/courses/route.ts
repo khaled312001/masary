@@ -46,7 +46,8 @@ export async function GET() {
       }))
     );
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "تعذر جلب البيانات" }, { status: 500 });
+    console.error("[api/courses] GET failed:", e);
+    return NextResponse.json({ error: "تعذر جلب البيانات" }, { status: 500 });
   }
 }
 
