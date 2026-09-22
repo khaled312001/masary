@@ -32,15 +32,13 @@ npm run dev   # على http://localhost:3000
 | `NEXT_PUBLIC_API_URL` | نفس الرابط (للمتصفح) |
 | `AUTH_SECRET` | **يجب أن تكون نفس قيمة AUTH_SECRET في الباك إند** |
 
-## النشر على Vercel
+## النشر على Hostinger
 
-1. ادفع الريبو على GitHub.
-2. أنشئ Project في Vercel من الريبو.
-3. أضف Environment Variables:
-   - `API_URL` = `https://api.masaary.com` (رابط الباك إند المنشور)
-   - `NEXT_PUBLIC_API_URL` = نفس الرابط
-   - `AUTH_SECRET` = نفس قيمة الباك إند
-4. Deploy.
+الموقع منشور على **masaary.com** كتطبيق Node.js على Hostinger (Passenger):
+
+- مجلد التطبيق على السيرفر: `~/domains/masaary.com/nodejs` (ملف التشغيل `server.js`، والمتغيرات في `.env` هناك).
+- البناء بـ `next build` (مخرجات `standalone`) ثم رفع الناتج للمجلد السابق.
+- السجلات: `~/domains/masaary.com/nodejs/console.log`.
 
 ## بنية الكود
 

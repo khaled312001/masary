@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const BASE = "https://masary-five.vercel.app";
+const BASE = "https://masaary.com";
 const CV_PATH = path.join(__dirname, "abdullah-cv.pdf");
 
 async function main() {

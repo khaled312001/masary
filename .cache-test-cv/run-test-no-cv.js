@@ -1,4 +1,4 @@
-const BASE = "https://masary-five.vercel.app";
+const BASE = "https://masaary.com";
 
 async function main() {
   const fd = new FormData();

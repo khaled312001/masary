@@ -1,9 +1,9 @@
 // Lightweight test: minimal text inputs but full required fields + CV.
-// Goal: keep total work under the 60s Vercel cap.
+// Goal: keep total work under the 60s request timeout.
 const fs = require("fs");
 const path = require("path");
 
-const BASE = "https://masary-five.vercel.app";
+const BASE = "https://masaary.com";
 const CV_PATH = path.join(__dirname, "abdullah-cv.pdf");
 
 async function main() {

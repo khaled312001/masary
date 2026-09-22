@@ -23,8 +23,8 @@ export default function DashboardError({
         </div>
         <h2 className="text-xl font-bold text-stone-900">حدث خطأ في تحميل الصفحة</h2>
         <p className="text-stone-600 text-sm">
-          الأرجح أن قاعدة البيانات غير متصلة. تحقق من <code className="bg-stone-100 px-1.5 py-0.5 rounded text-xs">DATABASE_URL</code> في Vercel،
-          ومن تفعيل <strong>Any Host</strong> في Hostinger.
+          الأرجح أن قاعدة البيانات غير متصلة. تحقق من <code className="bg-stone-100 px-1.5 py-0.5 rounded text-xs">DATABASE_URL</code> في ملف
+          <code className="bg-stone-100 px-1.5 py-0.5 rounded text-xs">.env</code> على سيرفر Hostinger.
         </p>
         {error.digest && (
           <p className="text-xs text-stone-400">معرّف الخطأ: {error.digest}</p>
